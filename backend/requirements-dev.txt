@@ -1,0 +1,8 @@
+# Development/test-only dependencies, layered on top of runtime requirements.
+
+-r requirements.txt
+
+pytest==9.0.2
+# Pinned below fastapi==0.104.1's bundled starlette==0.27.0, whose TestClient still uses
+# httpx's `app=` shortcut removed in httpx 0.28. Dev-only (test client), not a runtime dependency.
+httpx==0.27.2

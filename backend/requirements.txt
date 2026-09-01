@@ -1,0 +1,12 @@
+# Runtime dependencies only.
+# Every entry here is justified in docs/IMPLEMENTATION-PLAN.md §B — do not add convenience
+# dependencies without updating that document first (per C5 operating rules).
+
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.11.7
+pydantic-settings==2.10.1
+SQLAlchemy==2.0.44
+alembic==1.13.2
+psycopg2-binary==2.9.11
+python-dotenv==1.0.0
