@@ -706,3 +706,61 @@ counts, `C_fp`/`C_fn` cost values, and frontend fidelity. The Policy Gate itself
 (`domain/policy_gate.py`) and the full pipeline orchestrator are explicitly out of Checkpoint
 C9's scope — `assess()` is a self-contained layer ② call; nothing in this checkpoint decides
 ALLOW/HOLD/BLOCK.
+
+---
+
+## 20. Decision 15 (Checkpoint C10 / Policy Gate, human sign-off 2026-09-02)
+
+Resolves the one remaining open cell in Plan §I's decision table — "threshold crossed, LLM
+valid, risk_level == low" — previously marked `[OPEN — this is precisely the open
+disagreement-handling question]`. Architecture §9's own candidate rule ("the gate never
+downgrades toward ALLOW based on the LLM's word alone") is superseded by this decision, which
+permits a narrow, tightly-bounded downgrade rather than a blanket refusal — but the
+fail-closed default for every other case is unchanged.
+
+**`[LOCKED — Decision 15, human sign-off 2026-09-02]` A "low" `risk_level` MAY downgrade a
+triggered case to ALLOW only if ALL three hold:**
+1. **Exactly one signal triggered, and that signal is at its mildest triggering band only**
+   (`velocity == "elevated"`, OR `category_shift == "minor"`, OR `clustering == "clustered"` —
+   never `"critical"`/`"severe"`/`"highly_clustered"`, and never more than one signal
+   triggered).
+2. **`confidence >= 0.7`** (`app.config.GatePolicyConfig.confidence_floor`, versioned config,
+   not hardcoded).
+3. **`mandate_alignment != "low"`** — an internal LLM contradiction (`risk_level == "low"` but
+   `mandate_alignment == "low"`) fails closed to HOLD rather than receiving the benefit of the
+   doubt.
+
+If any of the three fail, the case HOLDs even with `risk_level == "low"`. The LLM never
+decides ALLOW/HOLD itself — it only supplies `mandate_alignment`/`risk_level`/`confidence`;
+`domain/policy_gate.py`'s `decide()` is the sole, fixed, auditable mapping from those fields to
+a decision. Zero execution authority (baseline §5) is unchanged by this decision.
+
+**Full decision table, now fully resolved:**
+| Condition | Outcome |
+|---|---|
+| Threshold not crossed | `decide()` must never be called — raises `ThresholdNotCrossedError` if it is |
+| LLM status in `{timeout, malformed, transport_error}` | HOLD, unconditionally (fail-closed, takes precedence over everything below) |
+| LLM status `success`, `risk_level` in `{medium, high}` | HOLD |
+| LLM status `success`, `risk_level == low` | Decision 15's three conditions — ALLOW only if all three pass |
+
+**This unblocks eval-design failure fixture #6** (contradictory internal signals), which was
+explicitly non-scoreable until this exact cell was resolved (baseline §9, §15 Phase 2; Plan
+§I, §L). Both directions are tested by name in `tests/unit/test_policy_gate.py`: a mild single
+signal with high LLM-reported risk (routes through the ordinary medium/high row), and — the
+direction actually blocked until now — a severe/critical signal with a confident, internally
+consistent "low" LLM read, which still HOLDs because condition 1 requires the mildest band
+specifically, proving the downgrade doesn't rubber-stamp "low".
+
+**Gate-rule-violation invariant (eval-design §14, target 0):** proven by construction, not
+sampled test data — `test_medium_or_high_risk_can_never_reach_allow_by_construction`
+exhaustively sweeps every other input dimension (2,520 combinations) with `risk_level` fixed
+at `medium`/`high`, exploiting the fact that `decide()`'s early return for that branch reads no
+other parameter at all, so the sweep is a complete enumeration of that branch's reachable
+states.
+
+**Explicitly not touched by Decision 15:** the disagreement-handling rule as originally framed
+in architecture §9 is superseded, not merely extended — but everything else in
+docs/IMPLEMENTATION-PLAN.md §S remains untouched (ingestion auth, fixture counts,
+`C_fp`/`C_fn` cost values, frontend fidelity). BLOCK, HOLD-resolution, and timeout state
+transitions remain entirely out of scope — `decide()` only ever returns `allow` or `hold`;
+milestone M4 is what wires this into a full pipeline with persistence.

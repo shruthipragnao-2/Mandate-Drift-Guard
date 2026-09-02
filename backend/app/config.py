@@ -6,11 +6,11 @@ decisions docs/IMPLEMENTATION-BASELINE.md §15 and docs/IMPLEMENTATION-PLAN.md �
 leave open (disagreement-handling rule, ingestion auth, etc.). It will be added in the
 milestone that actually needs it.
 
-`EvidenceEngineThresholds` (Checkpoint C7+C8) and `SemanticRiskClientConfig` (Checkpoint C9)
-are the two pieces of pipeline config that ARE defined now — Decisions 9-11 and 13-14
-(docs/IMPLEMENTATION-BASELINE.md, 2026-09-02) lock their exact values, and architecture's own
-framing of thresholds as a versioned config object (not hardcoded) applies to both the same
-way it does to `policy_version` for the gate (a later milestone, still undefined here).
+`EvidenceEngineThresholds` (Checkpoint C7+C8), `SemanticRiskClientConfig` (Checkpoint C9), and
+`GatePolicyConfig` (Checkpoint C10) are the three pieces of pipeline config that ARE defined
+now — Decisions 9-11, 13-14, and 15 (docs/IMPLEMENTATION-BASELINE.md, 2026-09-02) lock their
+exact values, and architecture's own framing of thresholds as a versioned config object (not
+hardcoded) applies to all three.
 """
 
 from pydantic import BaseModel
@@ -86,3 +86,22 @@ class SemanticRiskClientConfig(BaseModel):
 
 
 SEMANTIC_RISK_CLIENT_CONFIG = SemanticRiskClientConfig()
+
+
+class GatePolicyConfig(BaseModel):
+    """Versioned config for layer ③ (Checkpoint C10). Read by
+    `app.domain.policy_gate.decide` as a `config` keyword argument, never hardcoded inline —
+    mirrors `EvidenceEngineThresholds`/`SemanticRiskClientConfig`'s pattern. `rule_version` is
+    what `gate_decisions.rule_version` records per decision (architecture §5/§9), so every
+    gate decision is traceable to the exact rule set that produced it.
+    """
+
+    rule_version: str = "v1"
+
+    # Decision 15 (2026-09-02): the minimum self-reported confidence for a "low" risk_level to
+    # be eligible for a bounded downgrade to ALLOW. Below this floor, HOLD regardless of the
+    # other two conditions.
+    confidence_floor: float = 0.7
+
+
+GATE_POLICY_CONFIG = GatePolicyConfig()
