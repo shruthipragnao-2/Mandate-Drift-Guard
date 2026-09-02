@@ -1,0 +1,65 @@
+{
+  "mandate": {
+    "purpose": "monthly house help and domestic staff payments",
+    "budget": 6000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "house help"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Household Staff Payroll Regular 1",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 2",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 3",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 4",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 5",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 6",
+      "category": "house help",
+      "amount": 275.0,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Staff Welfare Vendor 1",
+      "category": "staff_welfare",
+      "amount": 675.0,
+      "occurred_at": "2026-08-10T09:00:00Z"
+    },
+    {
+      "merchant": "Staff Welfare Vendor 2",
+      "category": "staff_welfare",
+      "amount": 675.0,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "abstain_expected",
+  "drift_type": "n_a",
+  "rationale": "Category-shift ratio is constructed to land exactly at the significant/severe boundary (0.45) -- one additional out-of-mandate transaction would tip this into 'severe', while removing one would drop it back into 'significant'. Velocity is kept normal, not part of the deliberate ambiguity. A human reviewer could reasonably read this as a mild, tolerable extension of 'monthly house help and domestic staff payments' or as the early edge of real drift -- genuinely too close to the line to confidently assign legitimate or drift (LABELING_RUBRIC.md).",
+  "paired_with": null
+}

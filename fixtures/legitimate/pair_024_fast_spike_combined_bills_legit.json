@@ -1,0 +1,53 @@
+{
+  "mandate": {
+    "purpose": "monthly utility bills payments",
+    "budget": 6000.0,
+    "period_days": 18,
+    "allowed_categories": [
+      "bills"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Utility Board Regular 1",
+      "category": "bills",
+      "amount": 853.33,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 2",
+      "category": "bills",
+      "amount": 853.33,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 3",
+      "category": "bills",
+      "amount": 853.33,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 4",
+      "category": "bills",
+      "amount": 853.34,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    },
+    {
+      "merchant": "Streaming Addons Vendor 1",
+      "category": "streaming_addons",
+      "amount": 2560.0,
+      "occurred_at": "2026-08-14T09:00:00Z"
+    },
+    {
+      "merchant": "Streaming Addons Vendor 2",
+      "category": "streaming_addons",
+      "amount": 2560.0,
+      "occurred_at": "2026-08-17T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "fast_spike",
+  "rationale": "Triggering signal(s): velocity=elevated (ratio 1.6) AND category_shift=severe (ratio 0.6), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a plausible steady, spaced-out pattern that still serves 'monthly utility bills payments' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('streaming_addons') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_024_fast_spike_combined_bills_drift.json"
+}

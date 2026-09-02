@@ -1,0 +1,35 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 8000.0,
+    "period_days": 7,
+    "allowed_categories": [
+      "groceries"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Grocers Regular 1",
+      "category": "groceries",
+      "amount": 2666.67,
+      "occurred_at": "2026-08-06T06:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 2",
+      "category": "groceries",
+      "amount": 2666.67,
+      "occurred_at": "2026-08-06T12:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 3",
+      "category": "groceries",
+      "amount": 2666.66,
+      "occurred_at": "2026-08-06T18:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- velocity=elevated (ratio 1.4) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a more concerning late-bunched, coordinated trajectory that no longer plausibly serves 'weekly household groceries' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('wholesale_flip_stock') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_022_fast_spike_single_groceries_legit.json"
+}

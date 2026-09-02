@@ -1,0 +1,53 @@
+{
+  "mandate": {
+    "purpose": "household essentials replenishment",
+    "budget": 5000.0,
+    "period_days": 21,
+    "allowed_categories": [
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Home Essentials Store Regular 1",
+      "category": "household essentials",
+      "amount": 1205.36,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 2",
+      "category": "household essentials",
+      "amount": 1205.36,
+      "occurred_at": "2026-08-14T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 3",
+      "category": "household essentials",
+      "amount": 1205.36,
+      "occurred_at": "2026-08-16T05:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 4",
+      "category": "household essentials",
+      "amount": 1205.35,
+      "occurred_at": "2026-08-16T10:00:00Z"
+    },
+    {
+      "merchant": "Subscriptions Vendor 1",
+      "category": "subscriptions",
+      "amount": 803.57,
+      "occurred_at": "2026-08-16T14:00:00Z"
+    },
+    {
+      "merchant": "Subscriptions Vendor 2",
+      "category": "subscriptions",
+      "amount": 803.57,
+      "occurred_at": "2026-08-16T19:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "slow_drift",
+  "rationale": "Triggering signal(s): velocity=elevated (ratio 1.8) AND category_shift=significant (ratio 0.25), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a plausible one-off, single-event pattern that still serves 'household essentials replenishment' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('subscriptions') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_041_slow_drift_combined_household_essentials_drift.json"
+}

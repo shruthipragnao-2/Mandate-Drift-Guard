@@ -1,0 +1,65 @@
+{
+  "mandate": {
+    "purpose": "household essentials replenishment",
+    "budget": 5000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Home Essentials Store Regular 1",
+      "category": "household essentials",
+      "amount": 395.83,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 2",
+      "category": "household essentials",
+      "amount": 395.83,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 3",
+      "category": "household essentials",
+      "amount": 395.83,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 4",
+      "category": "household essentials",
+      "amount": 395.83,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 5",
+      "category": "household essentials",
+      "amount": 395.83,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 6",
+      "category": "household essentials",
+      "amount": 395.85,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Subscriptions Vendor 1",
+      "category": "subscriptions",
+      "amount": 62.5,
+      "occurred_at": "2026-08-10T09:00:00Z"
+    },
+    {
+      "merchant": "Subscriptions Vendor 2",
+      "category": "subscriptions",
+      "amount": 62.5,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "abstain_expected",
+  "drift_type": "n_a",
+  "rationale": "Category-shift ratio is constructed to land exactly at the none/minor boundary (0.05) -- one additional out-of-mandate transaction would tip this into 'minor', while removing one would drop it back into 'none'. Velocity is kept normal, not part of the deliberate ambiguity. A human reviewer could reasonably read this as a mild, tolerable extension of 'household essentials replenishment' or as the early edge of real drift -- genuinely too close to the line to confidently assign legitimate or drift (LABELING_RUBRIC.md).",
+  "paired_with": null
+}

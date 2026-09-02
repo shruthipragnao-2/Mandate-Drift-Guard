@@ -1,0 +1,47 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 8000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "groceries"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Grocers Regular 1",
+      "category": "groceries",
+      "amount": 1780.95,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 2",
+      "category": "groceries",
+      "amount": 1780.95,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 3",
+      "category": "groceries",
+      "amount": 1780.95,
+      "occurred_at": "2026-08-11T06:00:00Z"
+    },
+    {
+      "merchant": "Wholesale Flip Stock Vendor 1",
+      "category": "wholesale_flip_stock",
+      "amount": 471.43,
+      "occurred_at": "2026-08-11T12:00:00Z"
+    },
+    {
+      "merchant": "Wholesale Flip Stock Vendor 2",
+      "category": "wholesale_flip_stock",
+      "amount": 471.43,
+      "occurred_at": "2026-08-11T18:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "slow_drift",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- category_shift=minor (ratio 0.15) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a more concerning late-bunched, coordinated trajectory that no longer plausibly serves 'weekly household groceries' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('wholesale_flip_stock') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_028_slow_drift_single_groceries_legit.json"
+}

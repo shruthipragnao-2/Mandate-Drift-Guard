@@ -1,0 +1,47 @@
+{
+  "mandate": {
+    "purpose": "monthly fuel and vehicle top-up budget",
+    "budget": 4000.0,
+    "period_days": 21,
+    "allowed_categories": [
+      "fuel"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Fuel Station Regular 1",
+      "category": "fuel",
+      "amount": 733.33,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Fuel Station Regular 2",
+      "category": "fuel",
+      "amount": 733.33,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Fuel Station Regular 3",
+      "category": "fuel",
+      "amount": 733.34,
+      "occurred_at": "2026-08-10T09:00:00Z"
+    },
+    {
+      "merchant": "Vehicle Addons Vendor 1",
+      "category": "vehicle_addons",
+      "amount": 471.43,
+      "occurred_at": "2026-08-13T09:00:00Z"
+    },
+    {
+      "merchant": "Vehicle Addons Vendor 2",
+      "category": "vehicle_addons",
+      "amount": 471.43,
+      "occurred_at": "2026-08-16T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "slow_drift",
+  "rationale": "Triggering signal(s): category_shift=significant (ratio 0.3), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a plausible steady, spaced-out pattern that still serves 'monthly fuel and vehicle top-up budget' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('vehicle_addons') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_038_slow_drift_single_fuel_drift.json"
+}

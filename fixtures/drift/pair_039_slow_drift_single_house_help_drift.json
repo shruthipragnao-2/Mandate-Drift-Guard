@@ -1,0 +1,47 @@
+{
+  "mandate": {
+    "purpose": "monthly house help and domestic staff payments",
+    "budget": 6000.0,
+    "period_days": 28,
+    "allowed_categories": [
+      "house help"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Household Staff Payroll Regular 1",
+      "category": "house help",
+      "amount": 685.71,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 2",
+      "category": "house help",
+      "amount": 685.71,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 3",
+      "category": "house help",
+      "amount": 685.72,
+      "occurred_at": "2026-08-13T09:00:00Z"
+    },
+    {
+      "merchant": "Personal Grooming Vendor 1",
+      "category": "personal_grooming",
+      "amount": 1542.86,
+      "occurred_at": "2026-08-17T09:00:00Z"
+    },
+    {
+      "merchant": "Personal Grooming Vendor 2",
+      "category": "personal_grooming",
+      "amount": 1542.86,
+      "occurred_at": "2026-08-21T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "slow_drift",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- category_shift=severe (ratio 0.6) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a more concerning systematic, recurring trajectory that no longer plausibly serves 'monthly house help and domestic staff payments' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('personal_grooming') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_039_slow_drift_single_house_help_legit.json"
+}

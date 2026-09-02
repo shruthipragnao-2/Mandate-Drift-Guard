@@ -1,0 +1,35 @@
+{
+  "mandate": {
+    "purpose": "monthly telephone recharge and bills",
+    "budget": 2000.0,
+    "period_days": 7,
+    "allowed_categories": [
+      "telephone"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Telecom Ltd Regular 1",
+      "category": "telephone",
+      "amount": 809.52,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 2",
+      "category": "telephone",
+      "amount": 809.52,
+      "occurred_at": "2026-08-06T08:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 3",
+      "category": "telephone",
+      "amount": 809.53,
+      "occurred_at": "2026-08-06T16:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "fast_spike",
+  "rationale": "Triggering signal(s): velocity=elevated (ratio 1.7), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a plausible one-off, single-event pattern that still serves 'monthly telephone recharge and bills' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('gadget_accessories') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_007_fast_spike_single_telephone_drift.json"
+}

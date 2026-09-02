@@ -1,0 +1,65 @@
+{
+  "mandate": {
+    "purpose": "monthly telephone recharge and bills",
+    "budget": 2000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "telephone"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Telecom Ltd Regular 1",
+      "category": "telephone",
+      "amount": 133.33,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 2",
+      "category": "telephone",
+      "amount": 133.33,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 3",
+      "category": "telephone",
+      "amount": 133.33,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 4",
+      "category": "telephone",
+      "amount": 133.33,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 5",
+      "category": "telephone",
+      "amount": 133.33,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 6",
+      "category": "telephone",
+      "amount": 133.35,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Gadget Accessories Vendor 1",
+      "category": "gadget_accessories",
+      "amount": 100.0,
+      "occurred_at": "2026-08-10T09:00:00Z"
+    },
+    {
+      "merchant": "Gadget Accessories Vendor 2",
+      "category": "gadget_accessories",
+      "amount": 100.0,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "abstain_expected",
+  "drift_type": "n_a",
+  "rationale": "Category-shift ratio is constructed to land exactly at the minor/significant boundary (0.2) -- one additional out-of-mandate transaction would tip this into 'significant', while removing one would drop it back into 'minor'. Velocity is kept normal, not part of the deliberate ambiguity. A human reviewer could reasonably read this as a mild, tolerable extension of 'monthly telephone recharge and bills' or as the early edge of real drift -- genuinely too close to the line to confidently assign legitimate or drift (LABELING_RUBRIC.md).",
+  "paired_with": null
+}

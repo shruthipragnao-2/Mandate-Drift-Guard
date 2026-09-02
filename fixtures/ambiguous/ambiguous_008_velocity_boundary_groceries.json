@@ -1,0 +1,35 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 8000.0,
+    "period_days": 20,
+    "allowed_categories": [
+      "groceries"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Grocers Regular 1",
+      "category": "groceries",
+      "amount": 2666.67,
+      "occurred_at": "2026-08-03T09:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 2",
+      "category": "groceries",
+      "amount": 2666.67,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Grocers Regular 3",
+      "category": "groceries",
+      "amount": 2666.66,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "abstain_expected",
+  "drift_type": "n_a",
+  "rationale": "Velocity ratio is constructed to land exactly at the elevated/critical boundary (2.0) -- one slightly larger purchase would tip this into 'critical', while a slightly smaller one would drop it comfortably into 'elevated'. Category shift is not part of the ambiguity here (all spend stays in-mandate). Genuinely too close to a threshold edge to confidently call legitimate or drift by a human standard (LABELING_RUBRIC.md: boundary cases are strong abstain_expected candidates).",
+  "paired_with": null
+}

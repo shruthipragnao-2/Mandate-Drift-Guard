@@ -1,0 +1,35 @@
+{
+  "mandate": {
+    "purpose": "monthly utility bills payments",
+    "budget": 6000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "bills"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Utility Board Regular 1",
+      "category": "bills",
+      "amount": 2742.86,
+      "occurred_at": "2026-08-13T06:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 2",
+      "category": "bills",
+      "amount": 2742.86,
+      "occurred_at": "2026-08-13T12:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 3",
+      "category": "bills",
+      "amount": 2742.85,
+      "occurred_at": "2026-08-13T18:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- velocity=elevated (ratio 1.6) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a more concerning late-bunched, coordinated trajectory that no longer plausibly serves 'monthly utility bills payments' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('gaming_subscriptions') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_012_fast_spike_single_bills_legit.json"
+}

@@ -1,0 +1,47 @@
+{
+  "mandate": {
+    "purpose": "monthly fuel and vehicle top-up budget",
+    "budget": 4000.0,
+    "period_days": 21,
+    "allowed_categories": [
+      "fuel"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Fuel Station Regular 1",
+      "category": "fuel",
+      "amount": 685.71,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Fuel Station Regular 2",
+      "category": "fuel",
+      "amount": 685.71,
+      "occurred_at": "2026-08-14T09:00:00Z"
+    },
+    {
+      "merchant": "Fuel Station Regular 3",
+      "category": "fuel",
+      "amount": 685.72,
+      "occurred_at": "2026-08-16T06:00:00Z"
+    },
+    {
+      "merchant": "Vehicle Resale Parts Vendor 1",
+      "category": "vehicle_resale_parts",
+      "amount": 685.72,
+      "occurred_at": "2026-08-16T12:00:00Z"
+    },
+    {
+      "merchant": "Vehicle Resale Parts Vendor 2",
+      "category": "vehicle_resale_parts",
+      "amount": 685.71,
+      "occurred_at": "2026-08-16T18:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "slow_drift",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- category_shift=significant (ratio 0.4) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a more concerning late-bunched, coordinated trajectory that no longer plausibly serves 'monthly fuel and vehicle top-up budget' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('vehicle_resale_parts') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_044_slow_drift_single_fuel_legit.json"
+}

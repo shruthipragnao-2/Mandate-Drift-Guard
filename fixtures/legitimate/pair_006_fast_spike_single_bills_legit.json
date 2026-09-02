@@ -1,0 +1,35 @@
+{
+  "mandate": {
+    "purpose": "monthly utility bills payments",
+    "budget": 6000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "bills"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Utility Board Regular 1",
+      "category": "bills",
+      "amount": 2742.86,
+      "occurred_at": "2026-08-03T09:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 2",
+      "category": "bills",
+      "amount": 2742.86,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Utility Board Regular 3",
+      "category": "bills",
+      "amount": 2742.85,
+      "occurred_at": "2026-08-13T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "fast_spike",
+  "rationale": "Triggering signal(s): velocity=elevated (ratio 1.6), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a plausible steady, spaced-out pattern that still serves 'monthly utility bills payments' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('streaming_addons') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_006_fast_spike_single_bills_drift.json"
+}

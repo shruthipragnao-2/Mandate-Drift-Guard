@@ -1,0 +1,53 @@
+{
+  "mandate": {
+    "purpose": "household essentials replenishment",
+    "budget": 5000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Home Essentials Store Regular 1",
+      "category": "household essentials",
+      "amount": 1125.0,
+      "occurred_at": "2026-08-03T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 2",
+      "category": "household essentials",
+      "amount": 1125.0,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 3",
+      "category": "household essentials",
+      "amount": 1125.0,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Home Essentials Store Regular 4",
+      "category": "household essentials",
+      "amount": 1125.0,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "Entertainment Vendor 1",
+      "category": "entertainment",
+      "amount": 964.28,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    },
+    {
+      "merchant": "Entertainment Vendor 2",
+      "category": "entertainment",
+      "amount": 964.29,
+      "occurred_at": "2026-08-13T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- velocity=elevated (ratio 1.5) AND category_shift=significant (ratio 0.3) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a more concerning systematic, recurring trajectory that no longer plausibly serves 'household essentials replenishment' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('entertainment') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_005_fast_spike_combined_household_essentials_legit.json"
+}

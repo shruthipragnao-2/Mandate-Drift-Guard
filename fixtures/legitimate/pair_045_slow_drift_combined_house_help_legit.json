@@ -1,0 +1,53 @@
+{
+  "mandate": {
+    "purpose": "monthly house help and domestic staff payments",
+    "budget": 6000.0,
+    "period_days": 30,
+    "allowed_categories": [
+      "house help"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Household Staff Payroll Regular 1",
+      "category": "house help",
+      "amount": 672.0,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 2",
+      "category": "house help",
+      "amount": 672.0,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 3",
+      "category": "house help",
+      "amount": 672.0,
+      "occurred_at": "2026-08-20T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll Regular 4",
+      "category": "house help",
+      "amount": 672.0,
+      "occurred_at": "2026-08-22T06:00:00Z"
+    },
+    {
+      "merchant": "Staff Welfare Vendor 1",
+      "category": "staff_welfare",
+      "amount": 2016.0,
+      "occurred_at": "2026-08-22T12:00:00Z"
+    },
+    {
+      "merchant": "Staff Welfare Vendor 2",
+      "category": "staff_welfare",
+      "amount": 2016.0,
+      "occurred_at": "2026-08-22T18:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "slow_drift",
+  "rationale": "Triggering signal(s): velocity=elevated (ratio 1.6) AND category_shift=severe (ratio 0.6), identical between both members of this pair (eval-design.md \u00a72's paired-scenario methodology). The distinguishing 'tell' is clustering timing: this (legitimate) member's transactions are bunched into a single tight burst, hours apart, on the trajectory's final day -- reading as a plausible one-off, single-event pattern that still serves 'monthly house help and domestic staff payments' (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: any out-of-mandate category tag in this fixture ('staff_welfare') is human-readable audit context only -- packet_builder.py collapses it to the literal 'other', identical to the drift twin's tag. The clustering-band difference is the real, packet-visible signal distinguishing this pair.",
+  "paired_with": "fixtures/drift/pair_045_slow_drift_combined_house_help_drift.json"
+}

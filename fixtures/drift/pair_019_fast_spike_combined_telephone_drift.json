@@ -1,0 +1,53 @@
+{
+  "mandate": {
+    "purpose": "monthly telephone recharge and bills",
+    "budget": 2000.0,
+    "period_days": 10,
+    "allowed_categories": [
+      "telephone"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Telecom Ltd Regular 1",
+      "category": "telephone",
+      "amount": 625.6,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 2",
+      "category": "telephone",
+      "amount": 625.6,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 3",
+      "category": "telephone",
+      "amount": 625.6,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "Telecom Ltd Regular 4",
+      "category": "telephone",
+      "amount": 625.6,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Electronics Upgrade Vendor 1",
+      "category": "electronics_upgrade",
+      "amount": 108.8,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Electronics Upgrade Vendor 2",
+      "category": "electronics_upgrade",
+      "amount": 108.8,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "Same triggering signal(s) as the legitimate twin -- velocity=elevated (ratio 1.7) AND category_shift=minor (ratio 0.08) -- deliberately, per eval-design.md \u00a72, but this (drift) member's transactions are spread across well-separated days (each pairwise >=24h apart) -- reading as a more concerning systematic, recurring trajectory that no longer plausibly serves 'monthly telephone recharge and bills' as a reasonable person would read it (LABELING_RUBRIC.md). NOTE ON WHAT THE LLM ACTUALLY SEES: the out-of-mandate tag ('electronics_upgrade') is audit context only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's tag; the clustering-band difference above is the real signal.",
+  "paired_with": "fixtures/legitimate/pair_019_fast_spike_combined_telephone_legit.json"
+}
