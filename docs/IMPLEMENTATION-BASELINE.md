@@ -764,3 +764,26 @@ docs/IMPLEMENTATION-PLAN.md §S remains untouched (ingestion auth, fixture count
 `C_fp`/`C_fn` cost values, frontend fidelity). BLOCK, HOLD-resolution, and timeout state
 transitions remain entirely out of scope — `decide()` only ever returns `allow` or `hold`;
 milestone M4 is what wires this into a full pipeline with persistence.
+
+---
+
+## 21. Decision 16 (Checkpoint M5 pilot / dataset generation, human sign-off 2026-09-02)
+
+Resolves the velocity period-renewal gap flagged as `[OPEN — must be resolved before M5
+dataset generation begins]` in §18 above, by scoping the *generator*, not the evidence engine.
+
+**`[LOCKED — Decision 16, human sign-off 2026-09-02]` Every generated case (dataset generation
+and any future fixtures) is constrained to a single `period_days` window** — the full
+transaction stream's timestamps must fall within `[mandate.created_at, mandate.created_at +
+period_days]`. This is a deliberate scope boundary, not a workaround: period-renewal semantics
+(what happens to `expected_fraction` once a mandate has been active across multiple periods,
+§18's still-unresolved gap) remain a **named non-goal of this prototype**, stated alongside
+cold-start as an honest, explicit limitation — not silently avoided by construction, but
+openly scoped out and documented as such.
+
+**No code change.** `app/domain/evidence_engine/velocity.py`'s `TODO` and §18's `[OPEN]` note
+remain exactly as written — Decision 16 does not resolve the underlying period-renewal
+question, it only ensures the pilot/dataset-generation checkpoint never exercises the unsolved
+part of `compute_velocity`. The `[OPEN]` item in §18 stays open for any future multi-period
+work; Decision 16 is a generator-side constraint, recorded separately so the two are not
+conflated.

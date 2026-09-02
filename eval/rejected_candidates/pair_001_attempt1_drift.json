@@ -1,0 +1,36 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 7000.0,
+    "period_days": 7,
+    "allowed_categories": [
+      "groceries",
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Consumer Electronics Superstore",
+      "category": "electronics",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-02T10:00:00Z"
+    },
+    {
+      "merchant": "Gadget World Flagship Store",
+      "category": "electronics",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-04T10:00:00Z"
+    },
+    {
+      "merchant": "Premium Electronics Outlet",
+      "category": "electronics",
+      "amount": 2000.0,
+      "occurred_at": "2026-08-06T10:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "REJECTED CANDIDATE -- see pilot report; kept for the Stage B rejection log only.",
+  "paired_with": null
+}

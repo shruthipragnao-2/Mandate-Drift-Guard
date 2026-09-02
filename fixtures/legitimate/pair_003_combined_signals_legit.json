@@ -1,0 +1,77 @@
+{
+  "mandate": {
+    "purpose": "monthly house help and domestic staff payments",
+    "budget": 6000.0,
+    "period_days": 30,
+    "allowed_categories": [
+      "house help"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Household Staff Payroll 1",
+      "category": "house help",
+      "amount": 600.0,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 2",
+      "category": "house help",
+      "amount": 600.0,
+      "occurred_at": "2026-08-04T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 3",
+      "category": "house help",
+      "amount": 700.0,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 4",
+      "category": "house help",
+      "amount": 700.0,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 5",
+      "category": "house help",
+      "amount": 660.0,
+      "occurred_at": "2026-08-10T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 6",
+      "category": "house help",
+      "amount": 660.0,
+      "occurred_at": "2026-08-13T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 7",
+      "category": "house help",
+      "amount": 680.0,
+      "occurred_at": "2026-08-16T09:00:00Z"
+    },
+    {
+      "merchant": "Household Staff Payroll 8",
+      "category": "house help",
+      "amount": 680.0,
+      "occurred_at": "2026-08-19T09:00:00Z"
+    },
+    {
+      "merchant": "Staff Uniform & Hygiene Supplies",
+      "category": "staff_welfare",
+      "amount": 360.0,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    },
+    {
+      "merchant": "Staff Welfare Top-up",
+      "category": "staff_welfare",
+      "amount": 360.0,
+      "occurred_at": "2026-08-21T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "slow_drift",
+  "rationale": "Elevated velocity (bulk of the month's staff-payment budget spent within two thirds of the period) combined with a minor 12% category shift toward 'staff_welfare' plausibly reflects occasional hygiene/uniform provisioning for the household staff, bundled into the same payment run -- a defensible extension of 'house help' spend, not a departure from it. Deliberately constructed with TWO triggering signals at once (not one), to exercise Decision 15's requirement that a downgrade needs exactly one mild signal, not two.",
+  "paired_with": "fixtures/drift/pair_003_combined_signals_drift.json"
+}

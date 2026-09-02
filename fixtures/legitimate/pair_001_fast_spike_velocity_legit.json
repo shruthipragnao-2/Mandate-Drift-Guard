@@ -1,0 +1,36 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 7000.0,
+    "period_days": 7,
+    "allowed_categories": [
+      "groceries",
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Big Bazaar Bulk Order",
+      "category": "groceries",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-06T08:00:00Z"
+    },
+    {
+      "merchant": "Local Wholesale Grocers",
+      "category": "groceries",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-06T14:00:00Z"
+    },
+    {
+      "merchant": "Supermart Stock-up",
+      "category": "groceries",
+      "amount": 2000.0,
+      "occurred_at": "2026-08-06T20:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "fast_spike",
+  "rationale": "All three bulk purchases land within hours of each other on a single day (day 5 of 7) -- a tight burst consistent with last-minute preparation for a one-time household event, not an ongoing pattern. Clustering reads 'highly_clustered' (3/3 transactions inside one 24h window); spend stays entirely within the mandate's allowed categories. The single-burst-then-nothing shape is what makes this plausibly legitimate (LABELING_RUBRIC.md: a one-time deviation that still serves the stated purpose) -- and, after the 2026-09-02 fix, this is a real, packet-visible signal (the clustering band), not something only a merchant name could reveal.",
+  "paired_with": "fixtures/drift/pair_001_fast_spike_velocity_drift.json"
+}

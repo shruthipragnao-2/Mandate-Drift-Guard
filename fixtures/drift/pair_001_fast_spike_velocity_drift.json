@@ -1,0 +1,36 @@
+{
+  "mandate": {
+    "purpose": "weekly household groceries",
+    "budget": 7000.0,
+    "period_days": 7,
+    "allowed_categories": [
+      "groceries",
+      "household essentials"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "Metro Cash & Carry Wholesale",
+      "category": "groceries",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-02T10:00:00Z"
+    },
+    {
+      "merchant": "Bulk Grocery Distributors Ltd",
+      "category": "groceries",
+      "amount": 3000.0,
+      "occurred_at": "2026-08-04T10:00:00Z"
+    },
+    {
+      "merchant": "Wholesale Mart Resale Unit",
+      "category": "groceries",
+      "amount": 2000.0,
+      "occurred_at": "2026-08-06T10:00:00Z"
+    }
+  ],
+  "ground_truth_label": "drift",
+  "drift_type": "fast_spike",
+  "rationale": "Same total spend, transaction count, and elevated velocity as the legitimate twin -- deliberately, per eval-design.md \u00a72's paired-scenario methodology -- but spread evenly across days 1/3/5 instead of bunched into one burst. Clustering reads 'normal' (1/3, no 24h window holds more than one transaction) -- the one signal eval-design.md \u00a72 does not require to match between paired members. An evenly-paced, systematic restocking rhythm across the window reads as the start of a sustained elevated rate rather than a one-off event, which is a more concerning pattern than a single burst (LABELING_RUBRIC.md: the trajectory shape itself, not a merchant name, is what a reasonable person would read this from).",
+  "paired_with": "fixtures/legitimate/pair_001_fast_spike_velocity_legit.json"
+}

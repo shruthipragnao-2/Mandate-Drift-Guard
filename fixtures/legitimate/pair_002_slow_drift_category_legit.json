@@ -1,0 +1,66 @@
+{
+  "mandate": {
+    "purpose": "monthly bills and telephone payments",
+    "budget": 6000.0,
+    "period_days": 14,
+    "allowed_categories": [
+      "bills",
+      "telephone"
+    ],
+    "created_at": "2026-08-01T00:00:00Z"
+  },
+  "transactions": [
+    {
+      "merchant": "City Power & Water Board",
+      "category": "bills",
+      "amount": 600.0,
+      "occurred_at": "2026-08-02T09:00:00Z"
+    },
+    {
+      "merchant": "National Telecom Ltd",
+      "category": "telephone",
+      "amount": 400.0,
+      "occurred_at": "2026-08-03T09:00:00Z"
+    },
+    {
+      "merchant": "Municipal Bills Portal",
+      "category": "bills",
+      "amount": 600.0,
+      "occurred_at": "2026-08-05T09:00:00Z"
+    },
+    {
+      "merchant": "Household Broadband Co",
+      "category": "telephone",
+      "amount": 400.0,
+      "occurred_at": "2026-08-07T09:00:00Z"
+    },
+    {
+      "merchant": "Home Bills Autopay",
+      "category": "bills",
+      "amount": 700.0,
+      "occurred_at": "2026-08-08T09:00:00Z"
+    },
+    {
+      "merchant": "Gas Utility Payments",
+      "category": "bills",
+      "amount": 700.0,
+      "occurred_at": "2026-08-09T09:00:00Z"
+    },
+    {
+      "merchant": "FamilyStream Household Bundle",
+      "category": "subscriptions",
+      "amount": 300.0,
+      "occurred_at": "2026-08-06T09:00:00Z"
+    },
+    {
+      "merchant": "HomeBills OTT Add-on",
+      "category": "subscriptions",
+      "amount": 300.0,
+      "occurred_at": "2026-08-11T09:00:00Z"
+    }
+  ],
+  "ground_truth_label": "legitimate",
+  "drift_type": "slow_drift",
+  "rationale": "A gradual, 15% category-shift toward 'subscriptions' charges bundled alongside monthly bill payments plausibly represents household streaming/utility-bundle services commonly grouped with bills; the shift is mild, no single transaction is anomalous, and the bulk of spend (85%) remains on core bills/telephone categories (LABELING_RUBRIC.md: mild deviation still plausibly serving the stated purpose).",
+  "paired_with": "fixtures/drift/pair_002_slow_drift_category_drift.json"
+}
