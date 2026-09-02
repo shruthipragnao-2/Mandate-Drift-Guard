@@ -10,3 +10,8 @@ SQLAlchemy==2.0.44
 alembic==1.13.2
 psycopg2-binary==2.9.11
 python-dotenv==1.0.0
+# Pinned to the last 0.x release, not the newer 1.x line: anthropic==1.3.0 pulls in a vendored
+# anyio>=4.10 requirement that conflicts with fastapi==0.104.1's anyio<4.0.0 pin (pip flags it
+# as a broken/incompatible dependency set). 0.125.0 depends on the standard httpx/anyio stack
+# already pinned here for the TestClient and has no such conflict.
+anthropic==0.125.0

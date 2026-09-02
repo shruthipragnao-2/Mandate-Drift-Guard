@@ -515,3 +515,194 @@ resolve any of them silently.
 | §13 Frontend components | product-spec §22, §23; brief (Demo fix); architecture §18; Decision 1 |
 | §14 Non-goals | product-spec §21; brief (Explicitly excluded scope); explained-for-me.md |
 | §15 Open questions | consolidated from all documents' explicit `[OPEN]`/`[DECISION]`/`[CARRIED DECISION]` markers |
+
+---
+
+## 17. Decisions 4–7 (Checkpoint C6 / milestone M1, human sign-off 2026-09-02)
+
+Four items surfaced during the C6/M1 domain-model-and-schema planning pass (schema shape for
+`transactions.state`, `semantic_assessments.confidence`/`risk_level`, and the `audit_events`
+append-only grant) are resolved by explicit human sign-off and are now `[LOCKED]`, extending
+the decision numbering from §7/§11 above. As with Decisions 1–3, these are recorded here as the
+resolution, not re-derived from the original spec documents (none of the four originating
+questions were settled by the brief/product-spec/architecture/eval-design docs themselves).
+
+**`[LOCKED — Decision 4, human sign-off 2026-09-02]` `transactions.state`'s `pending_evaluation`
+value is transient and in-pipeline only — never written to Postgres as a durable row state.**
+The transactions row is inserted exactly once, already in its terminal-at-insert-time state
+(`allowed` or `held`), after the synchronous pipeline (§2) completes. No code path may persist a
+`pending_evaluation` row and later update it. This resolves the ambiguity the C6 planning pass
+flagged about whether Architecture A's single-request pipeline ever needs an intermediate
+durable transaction state — it does not.
+
+**`[LOCKED — Decision 5, human sign-off 2026-09-02]` `semantic_assessments.confidence` is
+NOT NULL.** A `semantic_assessments` row is written only when the full LLM response validates
+cleanly, including `confidence`. Missing, malformed, or out-of-range confidence is treated
+identically to any other malformed response (§5, §11 above): no `semantic_assessments` row is
+written at all, matching `gate_decisions.semantic_assessment_id`'s existing nullable-on-
+malformed-path design (architecture §5). The raw payload in that failure case lives only in
+`audit_events.payload`. This resolves the ambiguity the C6 planning pass flagged about whether
+Decision 3's "confidence missing/malformed/unusable" language implied a row with a null
+`confidence` field — it does not; that case simply never produces a row.
+
+**`[LOCKED — Decision 6, human sign-off 2026-09-02]` `semantic_assessments.risk_level` has
+exactly three values: `low`, `medium`, `high`.** This resolves the `risk_level` enum gap
+flagged in the C6 planning pass (no source document ever enumerated its value set; every
+example payload showed only `"high"`) — by analogy with the already-`[LOCKED]`
+`mandate_alignment` enum (brief, product-spec), not by independent textual evidence. The column
+is stored as `TEXT` at the DB level, not a native Postgres `ENUM` type, so the value set stays
+cheaply changeable without a migration if this needs revisiting; no DB-level `CHECK` constraint
+is added for it in C6 — value validation happens at the Pydantic layer, in a later milestone,
+not the schema layer.
+
+**`[LOCKED — Decision 7, human sign-off 2026-09-02]` The `audit_events` DB-role grant
+restriction (`INSERT`/`SELECT`-only, no `UPDATE`/`DELETE`) is explicitly deferred past C6.** No
+second DB role is created and no `REVOKE` migration is written in this checkpoint. Architecture
+§14's append-only claim for `audit_events` therefore remains an application-level convention
+only (no `UPDATE`/`DELETE` code path is written against that table) until a later checkpoint
+implements the DB-level enforcement — tracked via a `TODO` comment in the migration that creates
+`audit_events` (`23ff2fa8647b_create_audit_events_table.py`), not silently dropped.
+
+**Additionally approved 2026-09-02, as proposed in the C6 planning pass (not independently
+re-derived from architecture §5, which omits all four columns from its literal schema text):**
+`evidence_packets.transaction_id` (FK → `transactions.id`, NOT NULL),
+`gate_decisions.transaction_id` (FK → `transactions.id`, NOT NULL),
+`audit_events.mandate_id` (FK → `mandates.id`, NOT NULL), and `audit_events.transaction_id`
+(FK → `transactions.id`, NULLABLE — covers the rare pre-persistence-failure case where an audit
+event precedes even the transaction row existing). These close the traceability gap where a
+gate decision, evidence packet, or audit event on the fail-closed or nominal-ALLOW path had no
+durable link back to the specific transaction it concerned — necessary for the `[LOCKED]`
+audit-reconstruction requirement (§8 above) to actually hold on those paths.
+
+---
+
+## 18. Decisions 8–11 (Checkpoint C7+C8 / evidence engine, human sign-off 2026-09-02)
+
+One schema correction to C6 and three signal-formula decisions, resolving the numeric-formula
+open items tracked in docs/IMPLEMENTATION-PLAN.md §S/§F. As with Decisions 1–7, these are the
+resolution, not a re-derivation from the original spec documents — no source document ever gave
+formulas or exact cutoffs for the three deterministic signals (baseline §3/§15 both flagged
+this explicitly as `[OPEN, not specified anywhere]`).
+
+**`[LOCKED — Decision 8, human sign-off 2026-09-02]` `transactions.idempotency_key` uniqueness
+is scoped per mandate, not global.** The unique constraint is `(mandate_id, idempotency_key)`,
+not `(idempotency_key)` alone. A global constraint risked two unrelated mandates' synthetic
+dataset cases colliding on the same generated key string during the locked test-set batch run,
+silently dropping a transaction and corrupting the pipeline-error-rate metric (eval-design §16,
+target 0). Implemented as its own migration (`8e58ccd4981c`) on top of the C6 chain, not an
+edit to the already-applied `d87892027663_create_transactions_table.py` in place.
+
+**`[LOCKED — Decision 9, human sign-off 2026-09-02]` Spend velocity formula:**
+```
+expected_fraction = days_elapsed_in_period / period_days   (floor days_elapsed at 1)
+actual_fraction   = spend_so_far_in_period / budget
+velocity_ratio    = actual_fraction / expected_fraction
+Bands: normal (ratio <= 1.3), elevated (1.3 < ratio <= 2.0), critical (ratio > 2.0)
+```
+Resolves the `[OPEN, not specified anywhere]` velocity-formula item (baseline §3/§15). The
+Dad's-review velocity/pattern-consistency split proposal (baseline §3) is explicitly **not**
+touched by this decision and remains not adopted.
+
+**`[LOCKED — Decision 10, human sign-off 2026-09-02]` Category-shift formula:**
+```
+out_of_mandate_ratio = (sum of amount for transactions in the window whose category is
+                         NOT IN mandate.allowed_categories)
+                        / (sum of amount for all transactions in the window)
+Bands: none (ratio <= 0.05), minor (0.05 < ratio <= 0.20),
+       significant (0.20 < ratio <= 0.45), severe (ratio > 0.45)
+```
+
+**`[LOCKED — Decision 11, human sign-off 2026-09-02]` Clustering formula:**
+```
+burst_ratio = (max transaction count in any rolling 24-hour sub-window within the
+               analysis window) / (total transaction count in the analysis window)
+Bands: normal (ratio <= 0.4), clustered (0.4 < ratio <= 0.7), highly_clustered (ratio > 0.7)
+```
+Deliberately not a real clustering algorithm (no k-means/DBSCAN) — a pure, deterministic,
+reproducible count, matching architecture's own framing of layer ① as side-effect-free and
+trivially unit-testable.
+
+All six numeric cutoffs above live in a versioned config object
+(`app.config.EvidenceEngineThresholds`, `version: "v1"`), never hardcoded inline inside the
+signal functions, so dev-set calibration (a later milestone) can tune them via a config edit,
+not a code edit — mirroring the `policy_version` pattern architecture §9 already uses for gate
+thresholds.
+
+**Explicitly not touched by Decisions 9–11, still `[OPEN]`, not silently resolved:** the
+cross-signal threshold-crossing rule (does ANY elevated signal trigger evaluation, or some
+weighted combination?) is a distinct question these decisions don't answer — Checkpoint C7+C8
+implements a specific `[INFERRED]` rule for it (any signal above its lowest band triggers),
+documented and flagged as an inference in `app/domain/pipeline.py`, not claimed as a locked
+decision here. Also untouched: the disagreement-handling rule (§6/§I), retry policy, ingestion
+auth, fixture counts, `C_fp`/`C_fn` cost values, and frontend fidelity — all remain exactly as
+listed in docs/IMPLEMENTATION-PLAN.md §S.
+
+**`[LOCKED — Decision 12, human sign-off 2026-09-02]` Clustering's `N == 1` case is a
+distinct, explicit `band="normal"` branch — not the cold-start branch, and not run through
+the general Decision 11 formula.** As implemented, `burst_ratio` for a single-transaction
+window is always `1.0` by construction (one data point trivially fills its own 24-hour
+sub-window), which — combined with the `[INFERRED]` "any non-normal signal crosses the
+threshold" rule above — meant every mandate's very first transaction forced a threshold
+crossing and an LLM call, regardless of any real drift. This directly undercut eval-design
+§18's stated expectation that most cases trigger zero LLM calls. `N == 1` is a genuine
+boundary condition (clustering is undefined with nothing yet to cluster against), distinct
+from `N == 0` (cold-start — no data at all): `ratio` is still computed and reported as `1.0`
+for observability, but `band` is forced to `"normal"`. `N >= 2` continues to use the Decision
+11 formula unchanged. This refines, not replaces, Decision 11 — recorded as its own decision
+rather than silently folded into Decision 11's original text.
+
+**`[OPEN — must be resolved before M5 dataset generation begins]` Velocity's period-anchoring
+has no renewal logic.** `compute_velocity` (Decision 9) anchors `expected_fraction` against
+`mandate.created_at` with no reset after the first `period_days` window elapses — there is no
+period-start field in the schema distinct from mandate creation, and no source document
+addresses period renewal/rollover semantics at all. For a mandate evaluated in its second,
+third, or Nth cycle — and this project's own running example, "weekly household groceries", is
+inherently recurring, not a one-time budget — `expected_fraction` grows unbounded the longer
+the mandate has existed, and the velocity signal goes numb regardless of real spend. This
+directly risks eval-design's slow-drift narrative, which is specifically about sustained drift
+over time — the scenario most likely to span multiple periods and therefore most likely to hit
+this gap. **Not fixed now** — it needs an actual design decision (rolling-window reset per
+`period_days`? multiple explicit mandate-period instances? something else?) that has not been
+made. `app/domain/evidence_engine/velocity.py` carries a one-line `TODO` at the relevant branch
+pointing back here. Must be resolved before M5 (dataset generation) begins, since any
+multi-period slow-drift fixture would otherwise silently exercise a known-numb signal.
+
+---
+
+## 19. Decisions 13–14 (Checkpoint C9 / Semantic Risk Client, human sign-off 2026-09-02)
+
+Two decisions enabling the real Anthropic API integration for layer ②. As with Decisions
+1–12, these are the resolution, not a re-derivation — architecture §8/§10 and eval-design §16
+each independently *proposed* answers to both questions but explicitly stopped short of
+locking them (baseline §6, §15; architecture's own final sign-off checklist items 2–3).
+
+**`[LOCKED — Decision 13, human sign-off 2026-09-02]` Model pin: `claude-sonnet-5`.** Added to
+`app.config.Settings.llm_model`, an exact string in config, never resolved at request time
+("latest" or similar) — this is what makes the locked-test-set run-over-run reproducibility
+protocol (eval-design's core methodology) meaningful: every reported number traces to one
+fixed model string, not whatever "latest" happened to resolve to on the day the batch ran.
+
+**`[LOCKED — Decision 14, human sign-off 2026-09-02]` Retry policy: no retry on malformed or
+schema-invalid LLM output — straight to a failure state. Exactly one transport-level retry for
+connection errors / 5xx responses only, before that also becomes a failure state.** Timeout is
+its own third failure state, also with no retry. This formalizes, unchanged in substance, what
+architecture §10 and eval-design §16 already independently proposed ("simpler and arguably
+more defensible — fewer moving parts, same safety outcome") but neither document claimed as
+locked. Implemented with `anthropic.Anthropic(max_retries=0)` at client construction, so the
+SDK's own default retry behavior never competes with this module's explicit one-retry loop —
+the retry count is owned entirely by `app.domain.semantic_risk_client`, not the SDK.
+
+**Scope note, not a new decision:** `domain/semantic_risk_client.py`'s `assess()` returns a
+structured `SemanticAssessmentOutcome` with one of exactly four statuses
+(`success`/`timeout`/`malformed`/`transport_error`) and never raises for any of them. A 4xx
+response (e.g. an invalid API key) is deliberately **not** one of the four — it's treated as a
+genuinely unexpected/configuration-level failure and propagates uncaught, per baseline §6's
+"any unhandled pipeline exception → HOLD" rule, which lives at the Policy Gate / pipeline
+orchestrator milestone (not yet built) rather than being silently absorbed here.
+
+**Explicitly not touched by Decisions 13–14, still exactly as listed in
+docs/IMPLEMENTATION-PLAN.md §S:** the disagreement-handling rule, ingestion auth, fixture
+counts, `C_fp`/`C_fn` cost values, and frontend fidelity. The Policy Gate itself
+(`domain/policy_gate.py`) and the full pipeline orchestrator are explicitly out of Checkpoint
+C9's scope — `assess()` is a self-contained layer ② call; nothing in this checkpoint decides
+ALLOW/HOLD/BLOCK.
