@@ -1,5 +1,12 @@
 # Dataset Generation Log — M5 Pilot Batch
 
+*2026-09-02, human-approved archival note: the pilot's 7 fixture files (pair_001-003,
+ambiguous_001) were never written to `dataset_cases` and are confirmed not part of the
+100-case full-scale dataset below — they have been moved to `fixtures/pilot_archive/`
+(preserved, not deleted, as evidence for the report/video's methodology narrative) so a bare
+glob of `fixtures/legitimate/`, `fixtures/drift/`, `fixtures/ambiguous/` can never accidentally
+include them.*
+
 *2026-09-02. Records every Stage B (`eval/verify_pairs.py`) run against a candidate pair
 during pilot construction, per eval-design.md §2's "log the rejection rate" requirement —
 including the rejection, not just the final passing state.*
