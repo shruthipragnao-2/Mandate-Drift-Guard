@@ -215,24 +215,42 @@ def build_pair_1_rejected_first_attempt() -> tuple[dict, dict]:
 
 
 def build_pair_2_slow_drift_category_shift() -> tuple[dict, dict]:
-    """Target bands (both members): velocity=normal, category_shift=minor, clustering=normal.
+    """Target: both members velocity=normal, category_shift=minor (ratio 0.15) -- but
+    clustering now DIFFERS between members (legit=normal, drift=clustered), which is the
+    actual LLM-visible distinguishing signal.
+
+    Fix, 2026-09-02 (second pass): the first fix (varying only the out-of-mandate category
+    TAG -- "subscriptions" vs "entertainment") did not work -- packet_builder.py collapses
+    any category not in allowed_categories to the literal string "other", so the tag never
+    reached the evidence packet at all (confirmed via the packet-diff script; both packets
+    were byte-identical). The category tags are KEPT in the fixture JSON as human-readable
+    rationale/audit context only -- they are explicitly NOT the differentiating signal.
+    Instead, per the same approach as pair 1's fix, the TIMING of the out-of-mandate
+    transactions now differs, producing a genuine clustering-band difference:
+      - legit: 5 transactions spread across 5 well-separated days -> max_window_count=1,
+        ratio=1/5=0.2 -> normal.
+      - drift: 3 of the 5 transactions (the last in-mandate one + both out-of-mandate ones)
+        bunched into a single day, hours apart -> max_window_count=3, ratio=3/5=0.6 ->
+        clustered.
+    Reducing the in-mandate transaction count from 6 to 3 (same total in-mandate spend,
+    3400) was necessary to make a real band crossing achievable: with the original 8
+    same-hour, >=24h-apart transactions, no two in-mandate transactions could ever share a
+    window with each other (each pair of consecutive days lands exactly on the 24h
+    exclusion boundary), capping the maximum reachable window at 1 in-mandate + 2
+    out-of-mandate = 3 of 8 = 0.375 -- short of the >0.4 needed to cross into "clustered".
+    With 5 total transactions, that same 3-transaction bunch is 3/5=0.6, comfortably past
+    the boundary.
 
     Solve: total_amount=4000, target category_shift ratio=0.15 (minor: 0.05 < r <= 0.20)
-    -> out_of_mandate=600. period_days=14, days_elapsed=10 -> velocity ratio ~0.933 (normal).
-    8 transactions on 8 distinct days -> clustering ratio=1/8=0.125 (normal).
-
-    Fix, 2026-09-02: the out-of-mandate CATEGORY TAG now differs between members -- the
-    amount (300+300=600) and therefore the category_shift ratio/bucket are identical for
-    both (category_shift depends only on in-mandate-vs-not amounts, never on which specific
-    out-of-mandate label is used; confirmed against the real compute_category_shift in
-    eval/verify_pairs.py, not assumed). Legit keeps "subscriptions" (bill-adjacent, matches
-    its rationale); drift uses "entertainment" (clearly unrelated to bills/telephone).
+    -> out_of_mandate=600, in_mandate=3400. period_days=14, days_elapsed=10 (both members,
+    same max occurred_at) -> velocity ratio 0.9333 (normal), identical for both.
     """
     created_at = datetime(2026, 8, 1, tzinfo=timezone.utc)
     budget = 6000.0
     period_days = 14
     total_amount = 4000.0
     target_category_shift_ratio = 0.15
+    days_elapsed = 10
 
     out_of_mandate = category_shift_target_out_of_mandate(total_amount, target_category_shift_ratio)
     assert out_of_mandate == 600.0, out_of_mandate
@@ -247,52 +265,60 @@ def build_pair_2_slow_drift_category_shift() -> tuple[dict, dict]:
         created_at=created_at,
     )
 
-    in_mandate_plan = [
-        ("bills", 600.0, 1), ("telephone", 400.0, 2), ("bills", 600.0, 4),
-        ("telephone", 400.0, 6), ("bills", 700.0, 7), ("bills", 700.0, 8),
-    ]
-    assert sum(a for _, a, _ in in_mandate_plan) == in_mandate
+    # 3 in-mandate transactions summing to 3400 (was 6 -- see docstring for why fewer,
+    # larger transactions were necessary to make the clustering crossing achievable).
+    in_mandate_amounts = [("bills", 1200.0), ("telephone", 1200.0), ("bills", 1000.0)]
+    assert sum(a for _, a in in_mandate_amounts) == in_mandate
 
-    out_of_mandate_amounts_days = [(300.0, 5), (300.0, 10)]
-    assert sum(a for a, _ in out_of_mandate_amounts_days) == out_of_mandate
-
-    legit_out_of_mandate_category = "subscriptions"
-    drift_out_of_mandate_category = "entertainment"
-
-    days_elapsed = max([d for *_, d in in_mandate_plan] + [d for _, d in out_of_mandate_amounts_days])
-    assert days_elapsed == 10
+    legit_out_of_mandate_category = "subscriptions"  # narrative/audit label only -- see docstring
+    drift_out_of_mandate_category = "entertainment"  # narrative/audit label only -- see docstring
+    out_of_mandate_amounts = [300.0, 300.0]
+    assert sum(out_of_mandate_amounts) == out_of_mandate
 
     legit_merchants = {
-        "bills": ["City Power & Water Board", "Municipal Bills Portal", "Home Bills Autopay", "Gas Utility Payments"],
-        "telephone": ["National Telecom Ltd", "Household Broadband Co"],
+        "bills": ["City Power & Water Board", "Gas Utility Payments"],
+        "telephone": ["National Telecom Ltd"],
         "subscriptions": ["FamilyStream Household Bundle", "HomeBills OTT Add-on"],
     }
     drift_merchants = {
-        "bills": ["City Power & Water Board", "Municipal Bills Portal", "Home Bills Autopay", "Gas Utility Payments"],
-        "telephone": ["National Telecom Ltd", "Household Broadband Co"],
+        "bills": ["City Power & Water Board", "Gas Utility Payments"],
+        "telephone": ["National Telecom Ltd"],
         "entertainment": ["Personal Gaming Pass", "Solo Streaming Premium"],
     }
 
-    def _build_txns(plan, merchant_map, merchant_index):
+    def _txns_from_plan(plan, merchant_map):
+        merchant_index = {}
         txns = []
-        for category, amount, day in plan:
-            merchant = merchant_map[category][merchant_index[category]]
-            merchant_index[category] += 1
-            txns.append(_txn(merchant, category, amount, created_at + timedelta(days=day, hours=9)))
+        for category, amount, occurred_at in plan:
+            idx = merchant_index.get(category, 0)
+            merchant = merchant_map[category][idx]
+            merchant_index[category] = idx + 1
+            txns.append(_txn(merchant, category, amount, occurred_at))
         return txns
 
-    legit_full_plan = in_mandate_plan + [
-        (legit_out_of_mandate_category, a, d) for a, d in out_of_mandate_amounts_days
+    # Legit: all 5 spread across well-separated days -> clustering "normal".
+    (bills1, bills1_amt), (tel1, tel1_amt), (bills2, bills2_amt) = in_mandate_amounts
+    legit_plan = [
+        (bills1, bills1_amt, created_at + timedelta(days=1, hours=9)),
+        (tel1, tel1_amt, created_at + timedelta(days=4, hours=9)),
+        (bills2, bills2_amt, created_at + timedelta(days=7, hours=9)),
+        (legit_out_of_mandate_category, out_of_mandate_amounts[0], created_at + timedelta(days=9, hours=9)),
+        (legit_out_of_mandate_category, out_of_mandate_amounts[1], created_at + timedelta(days=days_elapsed, hours=9)),
     ]
-    drift_full_plan = in_mandate_plan + [
-        (drift_out_of_mandate_category, a, d) for a, d in out_of_mandate_amounts_days
+
+    # Drift: first 2 in-mandate spread out normally; the 3rd in-mandate transaction plus
+    # both out-of-mandate ones are bunched into one day (hours apart) -> clustering
+    # "clustered". Same max occurred_at (day 10) as legit -> identical velocity ratio.
+    drift_plan = [
+        (bills1, bills1_amt, created_at + timedelta(days=1, hours=9)),
+        (tel1, tel1_amt, created_at + timedelta(days=4, hours=9)),
+        (bills2, bills2_amt, created_at + timedelta(days=days_elapsed, hours=6)),
+        (drift_out_of_mandate_category, out_of_mandate_amounts[0], created_at + timedelta(days=days_elapsed, hours=12)),
+        (drift_out_of_mandate_category, out_of_mandate_amounts[1], created_at + timedelta(days=days_elapsed, hours=18)),
     ]
-    legit_txns = _build_txns(
-        legit_full_plan, legit_merchants, {"bills": 0, "telephone": 0, "subscriptions": 0}
-    )
-    drift_txns = _build_txns(
-        drift_full_plan, drift_merchants, {"bills": 0, "telephone": 0, "entertainment": 0}
-    )
+
+    legit_txns = _txns_from_plan(legit_plan, legit_merchants)
+    drift_txns = _txns_from_plan(drift_plan, drift_merchants)
 
     legit = {
         "mandate": mandate,
@@ -300,11 +326,19 @@ def build_pair_2_slow_drift_category_shift() -> tuple[dict, dict]:
         "ground_truth_label": "legitimate",
         "drift_type": "slow_drift",
         "rationale": (
-            "A gradual, 15% category-shift toward 'subscriptions' charges bundled alongside "
-            "monthly bill payments plausibly represents household streaming/utility-bundle "
-            "services commonly grouped with bills; the shift is mild, no single transaction is "
-            "anomalous, and the bulk of spend (85%) remains on core bills/telephone categories "
-            "(LABELING_RUBRIC.md: mild deviation still plausibly serving the stated purpose)."
+            "A gradual, 15% category-shift toward out-of-mandate spend (tagged "
+            "'subscriptions' in this fixture as human-readable audit context -- see note "
+            "below), spread evenly across the period alongside bill payments: clustering "
+            "reads 'normal' (1/5, no 24h window holds more than one transaction). No single "
+            "transaction is anomalous and the bulk of spend (85%) remains on core "
+            "bills/telephone categories (LABELING_RUBRIC.md: mild, evenly-paced deviation "
+            "still plausibly serving the stated purpose). NOTE ON WHAT THE LLM ACTUALLY "
+            "SEES: the 'subscriptions' category tag is narrative/audit framing only -- "
+            "packet_builder.py collapses any non-allowed category to the literal 'other', "
+            "so the tag itself never reaches the evidence packet. The clustering band "
+            "('normal' here, 'clustered' in the drift twin) is the real, packet-visible "
+            "signal distinguishing this pair; do not read the category tag as something the "
+            "deployed system observes."
         ),
         "paired_with": "fixtures/drift/pair_002_slow_drift_category_drift.json",
     }
@@ -314,15 +348,19 @@ def build_pair_2_slow_drift_category_shift() -> tuple[dict, dict]:
         "ground_truth_label": "drift",
         "drift_type": "slow_drift",
         "rationale": (
-            "Same 15% category-shift magnitude, spend profile, and gradual (no single "
-            "anomalous transaction) pattern as the legitimate twin -- deliberately, per "
-            "eval-design.md §2. The recurring charges are tagged 'entertainment' here, not "
-            "'subscriptions' -- individual gaming/streaming spend clearly unrelated to the "
-            "mandate's stated purpose of household bills and telephone payments, rather than "
-            "the bill-adjacent framing of the legitimate twin. A genuine, if modest, drift "
-            "(LABELING_RUBRIC.md: underlying reality, not just magnitude, decides the label) "
-            "that is now visible in the raw transaction category itself, not only inferable "
-            "from a merchant name."
+            "Same 15% category-shift magnitude and spend profile as the legitimate twin -- "
+            "deliberately, per eval-design.md §2 -- but the final bill payment and both "
+            "out-of-mandate charges (tagged 'entertainment' here as human-readable audit "
+            "context -- see note below) land within hours of each other on day 10: "
+            "clustering reads 'clustered' (3/5, one 24h window holds three transactions), "
+            "versus the legitimate twin's evenly-spread 'normal'. A burst of unrelated "
+            "spend arriving all at once late in the period reads as a more concerning "
+            "pattern than a steady trickle (LABELING_RUBRIC.md: the trajectory shape itself "
+            "is what a reasonable person would flag here). NOTE ON WHAT THE LLM ACTUALLY "
+            "SEES: the 'entertainment' category tag is narrative/audit framing only -- "
+            "packet_builder.py collapses it to 'other' identically to the legitimate twin's "
+            "'subscriptions' tag. The clustering-band difference above is the real signal; "
+            "do not read the category tag as something the deployed system observes."
         ),
         "paired_with": "fixtures/legitimate/pair_002_slow_drift_category_legit.json",
     }
@@ -337,18 +375,34 @@ def build_pair_2_slow_drift_category_shift() -> tuple[dict, dict]:
 
 
 def build_pair_3_combined_signals() -> tuple[dict, dict]:
-    """Target bands (both members): velocity=elevated AND category_shift=minor
-    simultaneously, clustering=normal (exactly two signals trigger, not three).
+    """Target: both members velocity=elevated AND category_shift=minor (ratio 0.12) --
+    clustering now DIFFERS between members (legit=normal, drift=clustered).
 
-    Solve: period_days=30, days_elapsed=20, target velocity_ratio=1.5 (elevated)
-    -> spend=6000 (== budget). target category_shift ratio=0.12 (minor) -> out_of_mandate=720.
-    10 transactions on 10 distinct days -> clustering ratio=1/10=0.1 (normal).
+    Fix, 2026-09-02 (second pass): the first fix (out-of-mandate category tag
+    "staff_welfare" vs "personal_grooming") did not work -- packet_builder.py collapses
+    both to the literal "other", confirmed via the packet-diff script (byte-identical
+    packets). Tags are kept in the fixture JSON as narrative/audit context only. Per the
+    same approach as pair 1's fix, timing now differs instead:
+      - legit: 6 transactions spread across 6 well-separated days -> max_window_count=1,
+        ratio=1/6=0.167 -> normal.
+      - drift: the last in-mandate transaction + both out-of-mandate ones bunched into one
+        day, hours apart -> max_window_count=3, ratio=3/6=0.5 -> clustered.
+    In-mandate transaction count reduced from 8 to 4 (same total in-mandate spend, 5280) for
+    the same reason as pair 2: the original same-hour, multi-day-apart transactions could
+    never share a window with each other, capping the maximum reachable window at
+    1 in-mandate + 2 out-of-mandate = 3 of 10 = 0.3 -- short of >0.4. With 6 total
+    transactions, the same 3-transaction bunch is 3/6=0.5, comfortably past the boundary.
 
-    Fix, 2026-09-02: the out-of-mandate CATEGORY TAG now differs between members (amount and
-    bucket stay identical -- confirmed via the real compute_category_shift in
-    eval/verify_pairs.py, not assumed). Legit uses "staff_welfare" (plausibly adjacent to
-    "house help"); drift uses "personal_grooming" (clearly the account holder's own personal
-    spend, not the staff's).
+    Note: with clustering now "clustered" for drift, drift triggers THREE signals
+    (velocity + category_shift + clustering), not two -- legit still triggers exactly two
+    (velocity + category_shift; clustering stays "normal"). Both still fail Decision 15's
+    "exactly one mild signal" downgrade condition regardless of whether it's two or three,
+    so the pair's core purpose (proving multi-signal cases block the downgrade) is
+    unaffected -- documented explicitly here so the signal count isn't misremembered later.
+
+    Solve: period_days=30, days_elapsed=20 (both members), target velocity_ratio=1.5
+    (elevated) -> spend=6000 (== budget). target category_shift ratio=0.12 (minor)
+    -> out_of_mandate=720, in_mandate=5280.
     """
     created_at = datetime(2026, 8, 1, tzinfo=timezone.utc)
     budget = 6000.0
@@ -373,48 +427,58 @@ def build_pair_3_combined_signals() -> tuple[dict, dict]:
         created_at=created_at,
     )
 
-    in_mandate_plan = [
-        ("house help", 600.0, 1), ("house help", 600.0, 3), ("house help", 700.0, 5),
-        ("house help", 700.0, 7), ("house help", 660.0, 9), ("house help", 660.0, 12),
-        ("house help", 680.0, 15), ("house help", 680.0, 18),
-    ]
-    assert sum(a for _, a, _ in in_mandate_plan) == in_mandate
+    # 4 equal in-mandate transactions summing to 5280 (was 8 -- see docstring).
+    in_mandate_amount = 1320.0
+    assert in_mandate_amount * 4 == in_mandate
 
-    out_of_mandate_amounts_days = [(360.0, 10), (360.0, 20)]
-    assert sum(a for a, _ in out_of_mandate_amounts_days) == out_of_mandate
-
-    legit_out_of_mandate_category = "staff_welfare"
-    drift_out_of_mandate_category = "personal_grooming"
-
-    full_days = [d for *_, d in in_mandate_plan] + [d for _, d in out_of_mandate_amounts_days]
-    assert max(full_days) == days_elapsed
-    assert len(set(full_days)) == len(full_days)  # every txn on a distinct day
+    legit_out_of_mandate_category = "staff_welfare"  # narrative/audit label only -- see docstring
+    drift_out_of_mandate_category = "personal_grooming"  # narrative/audit label only -- see docstring
+    out_of_mandate_amounts = [360.0, 360.0]
+    assert sum(out_of_mandate_amounts) == out_of_mandate
 
     legit_merchants = {
-        "house help": [f"Household Staff Payroll {i + 1}" for i in range(8)],
+        "house help": [f"Household Staff Payroll {i + 1}" for i in range(4)],
         "staff_welfare": ["Staff Uniform & Hygiene Supplies", "Staff Welfare Top-up"],
     }
     drift_merchants = {
-        "house help": [f"Household Staff Payroll {i + 1}" for i in range(8)],
+        "house help": [f"Household Staff Payroll {i + 1}" for i in range(4)],
         "personal_grooming": ["Personal Grooming Salon", "Individual Wellness Spa"],
     }
 
-    def _build_txns(plan, merchant_map, merchant_index):
+    def _txns_from_plan(plan, merchant_map):
+        merchant_index = {}
         txns = []
-        for category, amount, day in plan:
-            merchant = merchant_map[category][merchant_index[category]]
-            merchant_index[category] += 1
-            txns.append(_txn(merchant, category, amount, created_at + timedelta(days=day, hours=9)))
+        for category, amount, occurred_at in plan:
+            idx = merchant_index.get(category, 0)
+            merchant = merchant_map[category][idx]
+            merchant_index[category] = idx + 1
+            txns.append(_txn(merchant, category, amount, occurred_at))
         return txns
 
-    legit_full_plan = in_mandate_plan + [
-        (legit_out_of_mandate_category, a, d) for a, d in out_of_mandate_amounts_days
+    # Legit: all 6 spread across well-separated days -> clustering "normal".
+    legit_plan = [
+        ("house help", in_mandate_amount, created_at + timedelta(days=1, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=6, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=11, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=16, hours=9)),
+        (legit_out_of_mandate_category, out_of_mandate_amounts[0], created_at + timedelta(days=10, hours=9)),
+        (legit_out_of_mandate_category, out_of_mandate_amounts[1], created_at + timedelta(days=days_elapsed, hours=9)),
     ]
-    drift_full_plan = in_mandate_plan + [
-        (drift_out_of_mandate_category, a, d) for a, d in out_of_mandate_amounts_days
+
+    # Drift: first 3 in-mandate spread out; the 4th in-mandate transaction plus both
+    # out-of-mandate ones bunched into day 20, hours apart -> clustering "clustered". Same
+    # max occurred_at (day 20) as legit -> identical velocity ratio.
+    drift_plan = [
+        ("house help", in_mandate_amount, created_at + timedelta(days=1, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=6, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=11, hours=9)),
+        ("house help", in_mandate_amount, created_at + timedelta(days=days_elapsed, hours=6)),
+        (drift_out_of_mandate_category, out_of_mandate_amounts[0], created_at + timedelta(days=days_elapsed, hours=12)),
+        (drift_out_of_mandate_category, out_of_mandate_amounts[1], created_at + timedelta(days=days_elapsed, hours=18)),
     ]
-    legit_txns = _build_txns(legit_full_plan, legit_merchants, {"house help": 0, "staff_welfare": 0})
-    drift_txns = _build_txns(drift_full_plan, drift_merchants, {"house help": 0, "personal_grooming": 0})
+
+    legit_txns = _txns_from_plan(legit_plan, legit_merchants)
+    drift_txns = _txns_from_plan(drift_plan, drift_merchants)
 
     legit = {
         "mandate": mandate,
@@ -422,13 +486,21 @@ def build_pair_3_combined_signals() -> tuple[dict, dict]:
         "ground_truth_label": "legitimate",
         "drift_type": "slow_drift",
         "rationale": (
-            "Elevated velocity (bulk of the month's staff-payment budget spent within two "
+            "Elevated velocity (the full month's staff-payment budget spent within two "
             "thirds of the period) combined with a minor 12% category shift toward "
-            "'staff_welfare' plausibly reflects occasional hygiene/uniform provisioning for "
-            "the household staff, bundled into the same payment run -- a defensible extension "
-            "of 'house help' spend, not a departure from it. Deliberately constructed with "
-            "TWO triggering signals at once (not one), to exercise Decision 15's requirement "
-            "that a downgrade needs exactly one mild signal, not two."
+            "out-of-mandate spend (tagged 'staff_welfare' in this fixture as human-readable "
+            "audit context -- see note below), spread evenly across the window: clustering "
+            "reads 'normal' (1/6). Plausibly reflects occasional, spaced-out hygiene/uniform "
+            "provisioning for the household staff, not a departure from 'house help' spend "
+            "(LABELING_RUBRIC.md). Deliberately constructed with TWO triggering signals at "
+            "once (velocity + category_shift; clustering stays normal), to exercise "
+            "Decision 15's requirement that a downgrade needs exactly one mild signal, not "
+            "two. NOTE ON WHAT THE LLM ACTUALLY SEES: the 'staff_welfare' category tag is "
+            "narrative/audit framing only -- packet_builder.py collapses any non-allowed "
+            "category to the literal 'other', so the tag never reaches the evidence packet. "
+            "The clustering band is the real, packet-visible signal distinguishing this pair "
+            "from its drift twin; do not read the category tag as something the deployed "
+            "system observes."
         ),
         "paired_with": "fixtures/drift/pair_003_combined_signals_drift.json",
     }
@@ -438,16 +510,22 @@ def build_pair_3_combined_signals() -> tuple[dict, dict]:
         "ground_truth_label": "drift",
         "drift_type": "slow_drift",
         "rationale": (
-            "Same elevated-velocity and 12% category-shift magnitude as the legitimate twin, "
-            "same two-signals-at-once profile -- deliberately, per eval-design.md §2. Here "
-            "the out-of-mandate charges are tagged 'personal_grooming' rather than "
-            "'staff_welfare' -- the account holder's own personal grooming/wellness spend, "
-            "unrelated to the household staff the mandate pays for, not a similar-sounding "
-            "adjacent category (LABELING_RUBRIC.md: underlying reality decides the label, and "
-            "here the raw category tag itself now reflects that reality). Also exercises "
-            "Decision 15: two signals triggered means no downgrade is available regardless of "
-            "how the LLM reads it, which this pair's twin (and any future gate run against "
-            "it) should reflect."
+            "Same elevated-velocity and 12% category-shift magnitude as the legitimate "
+            "twin -- deliberately, per eval-design.md §2 -- but the final staff payment and "
+            "both out-of-mandate charges (tagged 'personal_grooming' here as human-readable "
+            "audit context -- see note below) land within hours of each other on day 20: "
+            "clustering reads 'clustered' (3/6), versus the legitimate twin's evenly-spread "
+            "'normal'. A burst of unrelated spend arriving all at once at the end of the "
+            "period, alongside the staff payment, reads as a more concerning pattern than a "
+            "spaced-out trickle (LABELING_RUBRIC.md: the trajectory shape itself is what a "
+            "reasonable person would flag). This pair's twin now triggers THREE signals "
+            "(velocity + category_shift + clustering) rather than legit's two -- both still "
+            "fail Decision 15's 'exactly one mild signal' condition, so no downgrade is "
+            "available either way. NOTE ON WHAT THE LLM ACTUALLY SEES: the "
+            "'personal_grooming' category tag is narrative/audit framing only -- "
+            "packet_builder.py collapses it to 'other' identically to the legitimate twin's "
+            "'staff_welfare' tag. The clustering-band difference above is the real signal; "
+            "do not read the category tag as something the deployed system observes."
         ),
         "paired_with": "fixtures/legitimate/pair_003_combined_signals_legit.json",
     }

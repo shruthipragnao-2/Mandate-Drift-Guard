@@ -12,50 +12,26 @@
     {
       "merchant": "Household Staff Payroll 1",
       "category": "house help",
-      "amount": 600.0,
+      "amount": 1320.0,
       "occurred_at": "2026-08-02T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 2",
       "category": "house help",
-      "amount": 600.0,
-      "occurred_at": "2026-08-04T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-07T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 3",
       "category": "house help",
-      "amount": 700.0,
-      "occurred_at": "2026-08-06T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-12T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 4",
       "category": "house help",
-      "amount": 700.0,
-      "occurred_at": "2026-08-08T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 5",
-      "category": "house help",
-      "amount": 660.0,
-      "occurred_at": "2026-08-10T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 6",
-      "category": "house help",
-      "amount": 660.0,
-      "occurred_at": "2026-08-13T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 7",
-      "category": "house help",
-      "amount": 680.0,
-      "occurred_at": "2026-08-16T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 8",
-      "category": "house help",
-      "amount": 680.0,
-      "occurred_at": "2026-08-19T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-17T09:00:00Z"
     },
     {
       "merchant": "Staff Uniform & Hygiene Supplies",
@@ -72,6 +48,6 @@
   ],
   "ground_truth_label": "legitimate",
   "drift_type": "slow_drift",
-  "rationale": "Elevated velocity (bulk of the month's staff-payment budget spent within two thirds of the period) combined with a minor 12% category shift toward 'staff_welfare' plausibly reflects occasional hygiene/uniform provisioning for the household staff, bundled into the same payment run -- a defensible extension of 'house help' spend, not a departure from it. Deliberately constructed with TWO triggering signals at once (not one), to exercise Decision 15's requirement that a downgrade needs exactly one mild signal, not two.",
+  "rationale": "Elevated velocity (the full month's staff-payment budget spent within two thirds of the period) combined with a minor 12% category shift toward out-of-mandate spend (tagged 'staff_welfare' in this fixture as human-readable audit context -- see note below), spread evenly across the window: clustering reads 'normal' (1/6). Plausibly reflects occasional, spaced-out hygiene/uniform provisioning for the household staff, not a departure from 'house help' spend (LABELING_RUBRIC.md). Deliberately constructed with TWO triggering signals at once (velocity + category_shift; clustering stays normal), to exercise Decision 15's requirement that a downgrade needs exactly one mild signal, not two. NOTE ON WHAT THE LLM ACTUALLY SEES: the 'staff_welfare' category tag is narrative/audit framing only -- packet_builder.py collapses any non-allowed category to the literal 'other', so the tag never reaches the evidence packet. The clustering band is the real, packet-visible signal distinguishing this pair from its drift twin; do not read the category tag as something the deployed system observes.",
   "paired_with": "fixtures/drift/pair_003_combined_signals_drift.json"
 }

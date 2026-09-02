@@ -13,44 +13,26 @@
     {
       "merchant": "City Power & Water Board",
       "category": "bills",
-      "amount": 600.0,
+      "amount": 1200.0,
       "occurred_at": "2026-08-02T09:00:00Z"
     },
     {
       "merchant": "National Telecom Ltd",
       "category": "telephone",
-      "amount": 400.0,
-      "occurred_at": "2026-08-03T09:00:00Z"
-    },
-    {
-      "merchant": "Municipal Bills Portal",
-      "category": "bills",
-      "amount": 600.0,
+      "amount": 1200.0,
       "occurred_at": "2026-08-05T09:00:00Z"
-    },
-    {
-      "merchant": "Household Broadband Co",
-      "category": "telephone",
-      "amount": 400.0,
-      "occurred_at": "2026-08-07T09:00:00Z"
-    },
-    {
-      "merchant": "Home Bills Autopay",
-      "category": "bills",
-      "amount": 700.0,
-      "occurred_at": "2026-08-08T09:00:00Z"
     },
     {
       "merchant": "Gas Utility Payments",
       "category": "bills",
-      "amount": 700.0,
-      "occurred_at": "2026-08-09T09:00:00Z"
+      "amount": 1000.0,
+      "occurred_at": "2026-08-08T09:00:00Z"
     },
     {
       "merchant": "FamilyStream Household Bundle",
       "category": "subscriptions",
       "amount": 300.0,
-      "occurred_at": "2026-08-06T09:00:00Z"
+      "occurred_at": "2026-08-10T09:00:00Z"
     },
     {
       "merchant": "HomeBills OTT Add-on",
@@ -61,6 +43,6 @@
   ],
   "ground_truth_label": "legitimate",
   "drift_type": "slow_drift",
-  "rationale": "A gradual, 15% category-shift toward 'subscriptions' charges bundled alongside monthly bill payments plausibly represents household streaming/utility-bundle services commonly grouped with bills; the shift is mild, no single transaction is anomalous, and the bulk of spend (85%) remains on core bills/telephone categories (LABELING_RUBRIC.md: mild deviation still plausibly serving the stated purpose).",
+  "rationale": "A gradual, 15% category-shift toward out-of-mandate spend (tagged 'subscriptions' in this fixture as human-readable audit context -- see note below), spread evenly across the period alongside bill payments: clustering reads 'normal' (1/5, no 24h window holds more than one transaction). No single transaction is anomalous and the bulk of spend (85%) remains on core bills/telephone categories (LABELING_RUBRIC.md: mild, evenly-paced deviation still plausibly serving the stated purpose). NOTE ON WHAT THE LLM ACTUALLY SEES: the 'subscriptions' category tag is narrative/audit framing only -- packet_builder.py collapses any non-allowed category to the literal 'other', so the tag itself never reaches the evidence packet. The clustering band ('normal' here, 'clustered' in the drift twin) is the real, packet-visible signal distinguishing this pair; do not read the category tag as something the deployed system observes.",
   "paired_with": "fixtures/drift/pair_002_slow_drift_category_drift.json"
 }

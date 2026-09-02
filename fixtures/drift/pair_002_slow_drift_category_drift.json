@@ -13,54 +13,36 @@
     {
       "merchant": "City Power & Water Board",
       "category": "bills",
-      "amount": 600.0,
+      "amount": 1200.0,
       "occurred_at": "2026-08-02T09:00:00Z"
     },
     {
       "merchant": "National Telecom Ltd",
       "category": "telephone",
-      "amount": 400.0,
-      "occurred_at": "2026-08-03T09:00:00Z"
-    },
-    {
-      "merchant": "Municipal Bills Portal",
-      "category": "bills",
-      "amount": 600.0,
+      "amount": 1200.0,
       "occurred_at": "2026-08-05T09:00:00Z"
-    },
-    {
-      "merchant": "Household Broadband Co",
-      "category": "telephone",
-      "amount": 400.0,
-      "occurred_at": "2026-08-07T09:00:00Z"
-    },
-    {
-      "merchant": "Home Bills Autopay",
-      "category": "bills",
-      "amount": 700.0,
-      "occurred_at": "2026-08-08T09:00:00Z"
     },
     {
       "merchant": "Gas Utility Payments",
       "category": "bills",
-      "amount": 700.0,
-      "occurred_at": "2026-08-09T09:00:00Z"
+      "amount": 1000.0,
+      "occurred_at": "2026-08-11T06:00:00Z"
     },
     {
       "merchant": "Personal Gaming Pass",
       "category": "entertainment",
       "amount": 300.0,
-      "occurred_at": "2026-08-06T09:00:00Z"
+      "occurred_at": "2026-08-11T12:00:00Z"
     },
     {
       "merchant": "Solo Streaming Premium",
       "category": "entertainment",
       "amount": 300.0,
-      "occurred_at": "2026-08-11T09:00:00Z"
+      "occurred_at": "2026-08-11T18:00:00Z"
     }
   ],
   "ground_truth_label": "drift",
   "drift_type": "slow_drift",
-  "rationale": "Same 15% category-shift magnitude, spend profile, and gradual (no single anomalous transaction) pattern as the legitimate twin -- deliberately, per eval-design.md \u00a72. The recurring charges are tagged 'entertainment' here, not 'subscriptions' -- individual gaming/streaming spend clearly unrelated to the mandate's stated purpose of household bills and telephone payments, rather than the bill-adjacent framing of the legitimate twin. A genuine, if modest, drift (LABELING_RUBRIC.md: underlying reality, not just magnitude, decides the label) that is now visible in the raw transaction category itself, not only inferable from a merchant name.",
+  "rationale": "Same 15% category-shift magnitude and spend profile as the legitimate twin -- deliberately, per eval-design.md \u00a72 -- but the final bill payment and both out-of-mandate charges (tagged 'entertainment' here as human-readable audit context -- see note below) land within hours of each other on day 10: clustering reads 'clustered' (3/5, one 24h window holds three transactions), versus the legitimate twin's evenly-spread 'normal'. A burst of unrelated spend arriving all at once late in the period reads as a more concerning pattern than a steady trickle (LABELING_RUBRIC.md: the trajectory shape itself is what a reasonable person would flag here). NOTE ON WHAT THE LLM ACTUALLY SEES: the 'entertainment' category tag is narrative/audit framing only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's 'subscriptions' tag. The clustering-band difference above is the real signal; do not read the category tag as something the deployed system observes.",
   "paired_with": "fixtures/legitimate/pair_002_slow_drift_category_legit.json"
 }

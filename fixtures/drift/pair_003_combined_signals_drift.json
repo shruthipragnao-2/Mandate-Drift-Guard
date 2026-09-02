@@ -12,66 +12,42 @@
     {
       "merchant": "Household Staff Payroll 1",
       "category": "house help",
-      "amount": 600.0,
+      "amount": 1320.0,
       "occurred_at": "2026-08-02T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 2",
       "category": "house help",
-      "amount": 600.0,
-      "occurred_at": "2026-08-04T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-07T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 3",
       "category": "house help",
-      "amount": 700.0,
-      "occurred_at": "2026-08-06T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-12T09:00:00Z"
     },
     {
       "merchant": "Household Staff Payroll 4",
       "category": "house help",
-      "amount": 700.0,
-      "occurred_at": "2026-08-08T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 5",
-      "category": "house help",
-      "amount": 660.0,
-      "occurred_at": "2026-08-10T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 6",
-      "category": "house help",
-      "amount": 660.0,
-      "occurred_at": "2026-08-13T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 7",
-      "category": "house help",
-      "amount": 680.0,
-      "occurred_at": "2026-08-16T09:00:00Z"
-    },
-    {
-      "merchant": "Household Staff Payroll 8",
-      "category": "house help",
-      "amount": 680.0,
-      "occurred_at": "2026-08-19T09:00:00Z"
+      "amount": 1320.0,
+      "occurred_at": "2026-08-21T06:00:00Z"
     },
     {
       "merchant": "Personal Grooming Salon",
       "category": "personal_grooming",
       "amount": 360.0,
-      "occurred_at": "2026-08-11T09:00:00Z"
+      "occurred_at": "2026-08-21T12:00:00Z"
     },
     {
       "merchant": "Individual Wellness Spa",
       "category": "personal_grooming",
       "amount": 360.0,
-      "occurred_at": "2026-08-21T09:00:00Z"
+      "occurred_at": "2026-08-21T18:00:00Z"
     }
   ],
   "ground_truth_label": "drift",
   "drift_type": "slow_drift",
-  "rationale": "Same elevated-velocity and 12% category-shift magnitude as the legitimate twin, same two-signals-at-once profile -- deliberately, per eval-design.md \u00a72. Here the out-of-mandate charges are tagged 'personal_grooming' rather than 'staff_welfare' -- the account holder's own personal grooming/wellness spend, unrelated to the household staff the mandate pays for, not a similar-sounding adjacent category (LABELING_RUBRIC.md: underlying reality decides the label, and here the raw category tag itself now reflects that reality). Also exercises Decision 15: two signals triggered means no downgrade is available regardless of how the LLM reads it, which this pair's twin (and any future gate run against it) should reflect.",
+  "rationale": "Same elevated-velocity and 12% category-shift magnitude as the legitimate twin -- deliberately, per eval-design.md \u00a72 -- but the final staff payment and both out-of-mandate charges (tagged 'personal_grooming' here as human-readable audit context -- see note below) land within hours of each other on day 20: clustering reads 'clustered' (3/6), versus the legitimate twin's evenly-spread 'normal'. A burst of unrelated spend arriving all at once at the end of the period, alongside the staff payment, reads as a more concerning pattern than a spaced-out trickle (LABELING_RUBRIC.md: the trajectory shape itself is what a reasonable person would flag). This pair's twin now triggers THREE signals (velocity + category_shift + clustering) rather than legit's two -- both still fail Decision 15's 'exactly one mild signal' condition, so no downgrade is available either way. NOTE ON WHAT THE LLM ACTUALLY SEES: the 'personal_grooming' category tag is narrative/audit framing only -- packet_builder.py collapses it to 'other' identically to the legitimate twin's 'staff_welfare' tag. The clustering-band difference above is the real signal; do not read the category tag as something the deployed system observes.",
   "paired_with": "fixtures/legitimate/pair_003_combined_signals_legit.json"
 }

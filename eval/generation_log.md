@@ -107,3 +107,54 @@ now identified. This is a structural consequence of the already-locked `"other"`
 design (architecture §14's merchant/category free-text exclusion), not a bug in this fix.
 Flagged for a decision before generating 60-100 cases at this same shape, since every
 category-shift-based pair in a larger batch would inherit the same gap.
+
+## Fix, 2026-09-02 (second pass): timing/clustering distinction for pairs 2 and 3
+
+**Decision, human-approved**: `packet_builder.py`'s category-to-`"other"` collapsing stays
+exactly as locked (structural injection-resistance) — this is a fixture-content fix only.
+The out-of-mandate category tags from the first-pass fix (`"subscriptions"`/`"entertainment"`
+for pair 2, `"staff_welfare"`/`"personal_grooming"` for pair 3) are **kept in the fixture
+JSON as human-readable rationale/audit context only** — both rationale texts now say this
+explicitly, so a future reviewer isn't misled into thinking the LLM sees the tag. The actual
+distinguishing signal is now `clustering`, using the same timing-based approach as pair 1's
+original fix.
+
+**Design constraint discovered**: the original in-mandate transaction schedules for pairs 2
+and 3 (6 and 8 same-hour, multi-day-apart transactions respectively) made every consecutive
+pair of in-mandate transactions land exactly on the 24-hour exclusion boundary — meaning no
+two in-mandate transactions could ever share a clustering window with each other. That capped
+the maximum reachable window (however the 2 movable out-of-mandate transactions were placed)
+at 1 in-mandate + 2 out-of-mandate = 3 transactions — `3/8=0.375` for pair 2 and `3/10=0.3`
+for pair 3, both short of the `>0.4` needed to cross into `"clustered"`. Reducing the
+in-mandate transaction *count* (not the in-mandate *spend*, *category_shift ratio*, or
+*velocity ratio*, all unchanged) — pair 2 from 6 to 3, pair 3 from 8 to 4 — made the same
+3-transaction bunch cross the threshold cleanly: `3/5=0.6` and `3/6=0.5` respectively.
+
+**Re-verification (`eval/verify_pairs.py --pilot`), all 3 pairs, 0 rejections**:
+```
+[PASS] pair_001: clustering A=highly_clustered(1.0)  B=normal(0.333)        (unchanged from prior fix)
+[PASS] pair_002: clustering A=normal(0.2)             B=clustered(0.6)       velocity/category_shift/spend/count all match
+[PASS] pair_003: clustering A=normal(0.167)           B=clustered(0.5)       velocity/category_shift/spend/count all match
+
+Stage B summary: 3 pair(s) checked, 0 rejected
+```
+
+**Packet-diff re-check (`packet_builder.build_evidence_packet`, same proof standard as
+pair 1)** — the ONLY difference in the LLM-visible packet for every pair is now
+`signals.clustering`:
+```
+pair_001: legit.signals.clustering='highly_clustered'  vs  drift.signals.clustering='normal'   (all else identical)
+pair_002: legit.signals.clustering='normal'             vs  drift.signals.clustering='clustered' (all else identical)
+pair_003: legit.signals.clustering='normal'             vs  drift.signals.clustering='clustered' (all else identical)
+```
+Mandate, `budget_utilization`, `spend_velocity`, `category_shift`, and `trajectory` are
+byte-identical between legit/drift for all three pairs — expected, since those are exactly
+the fields `signal_match` requires to match. All three pilot pairs are now genuinely
+distinguishable by the deployed evidence packet alone, not merely by fixture metadata a
+human happens to read.
+
+**Side effect, noted not hidden**: pair 3's drift member now triggers three signals
+(velocity + category_shift + clustering) rather than two, since clustering crossed out of
+`"normal"`. The pair's original purpose — proving a multi-signal case blocks Decision 15's
+"exactly one mild signal" downgrade — is unaffected; three failing conditions block the
+downgrade exactly as two would.
