@@ -787,3 +787,39 @@ question, it only ensures the pilot/dataset-generation checkpoint never exercise
 part of `compute_velocity`. The `[OPEN]` item in §18 stays open for any future multi-period
 work; Decision 16 is a generator-side constraint, recorded separately so the two are not
 conflated.
+
+---
+
+## 22. Decisions 17–18 (Checkpoint C11 / pipeline orchestrator, human sign-off 2026-09-02)
+
+Two decisions resolving items previously listed `[OPEN]` in §12/§15 (ingestion auth) and
+introducing a new, explicitly-flagged-as-arbitrary default (HOLD-timeout mechanism). As with
+Decisions 1–16, these are the resolution, not a re-derivation from the original spec documents.
+
+**`[LOCKED — Decision 17, human sign-off 2026-09-02]` Ingestion (`POST /mandates/{id}/
+transactions`) requires the same bearer-token auth as HOLD-resolution.** This resolves §12's
+`[OPEN]` item ("whether ingestion also requires auth, or stays open for demo/seed
+convenience") — the single static bearer token already `[LOCKED]` for `POST /cases/{id}/
+resolve` (architecture §7, product-spec) now gates both of the system's write-with-consequence
+endpoints, not just resolution. `POST /mandates` (mandate creation) and the read-only `GET`
+endpoints are unaffected by this decision and remain as proposed in baseline §12 pending their
+own future review. No code changes in this checkpoint — the API layer (`api/transactions.py`,
+`auth.py`) is explicitly out of scope for Checkpoint C11 (deferred to C12); this decision is
+recorded now so C12 implements it correctly the first time rather than shipping ingestion
+unauthenticated and retrofitting auth later.
+
+**`[LOCKED — Decision 18, human sign-off 2026-09-02]` HOLD-timeout is checked lazily on read,
+not via a background job.** Consistent with the already-`[LOCKED]` no-queue/no-scheduler
+architecture (baseline §2, §14's rejection of an event-driven pipeline), there is no
+`asyncio` background task and no cron-triggered endpoint (the mechanism baseline §7 left as
+`[PROPOSED]`, not further specified). Instead: a case is timed out if
+`now() - cases.opened_at > timeout_window`, evaluated the next time that case is read (e.g. a
+future `GET /cases/{id}` call, or — as built in this checkpoint — `domain/pipeline.py`'s
+`check_and_apply_timeout()`, called explicitly rather than on any implicit schedule).
+`timeout_window` is a named, versioned config value (`app.config.HoldResolutionConfig.
+timeout_window_hours`, default `24.0`) — **explicitly an arbitrary starting default, not a
+deeply-deliberated product decision**, changeable via config edit alone, consistent with the
+`EvidenceEngineThresholds`/`SemanticRiskClientConfig`/`GatePolicyConfig` versioned-config
+pattern already established (Decisions 9–11, 13–15). A timed-out case transitions directly to
+`resolved_block` (`resolved_by="system:timeout"`) — BLOCK remains reachable only via HOLD,
+never directly from `EVALUATING` (baseline §7, unchanged).

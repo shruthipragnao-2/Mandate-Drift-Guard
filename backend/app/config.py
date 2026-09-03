@@ -105,3 +105,20 @@ class GatePolicyConfig(BaseModel):
 
 
 GATE_POLICY_CONFIG = GatePolicyConfig()
+
+
+class HoldResolutionConfig(BaseModel):
+    """Versioned config for HOLD-timeout handling (Checkpoint C11). Read by
+    `app.domain.pipeline.check_and_apply_timeout` as a `config` keyword argument, mirroring
+    the `EvidenceEngineThresholds`/`SemanticRiskClientConfig`/`GatePolicyConfig` pattern.
+    """
+
+    version: str = "v1"
+
+    # Decision 18 (2026-09-02): checked lazily on read (no background job/scheduler, per the
+    # already-locked no-queue architecture), not enforced at any fixed wall-clock moment.
+    # Explicitly an arbitrary starting default, not a deeply-deliberated product decision.
+    timeout_window_hours: float = 24.0
+
+
+HOLD_RESOLUTION_CONFIG = HoldResolutionConfig()
