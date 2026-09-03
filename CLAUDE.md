@@ -23,15 +23,25 @@ Fail-closed on any uncertainty. FastAPI + Postgres + Alembic, no queue, no agent
 DONE: C5, C6 (Decisions 4-8), C7+C8 (Decisions 9-12), C9 (Decisions 13-14), C10 (Decision 15),
 M5 dataset (100 cases + archived pilot, Decision 16), C11 (orchestrator + eval harness,
 Decisions 17-18), C12 (API layer).
-IN PROGRESS: prompt calibration. Found and fixed a real bug -- eval/run.py wasn't passing
-fixture created_at to the DB Mandate row, corrupting velocity signals dev-set-wide. Fixed via
-eval/dataset_loader.py's persist_case_mandate() (single source of truth now). Tested
-prompt_version "v2" against the anchoring bias found in v1 (LLM rarely reports risk_level=
-"low"); v2 showed mixed results on the full dev set (marginal slow_drift gain, no fast_spike
-gain, one new false negative, real regression in ambiguous-case abstention) -- decision: v1
-retained, v2 documented as tested-and-rejected in eval/calibration_log.md.
-NEXT ACTION: revert semantic_risk_client.py's prompt to v1 exactly, confirm tests pass,
-commit. Then C13 (locked test-set run) is unblocked. Full history: eval/calibration_log.md.
+CALIBRATION: closed. Two outcomes. (1) A real bug found and fixed -- eval/run.py wasn't
+passing fixture created_at to the DB Mandate row, corrupting velocity signals dev-set-wide;
+fixed via eval/dataset_loader.py's persist_case_mandate(), now the single sanctioned way to
+materialize a case's mandate row. (2) prompt_version "v2", aimed at the medium-risk anchoring
+in v1, was tested on the full dev set and REJECTED. It worked directionally (allows 1/34 ->
+6/34, slow_drift F1 0.6667 -> 0.7000) but cost a fast_spike regression (F1 0.6667 -> 0.6000),
+one new false negative (pair_013_fast_spike_single_telephone_drift, released as allow), net
+detection 10 -> 9, and a collapse in ambiguous-case abstention (correct 4/6 -> 1/6, with
+overconfidence 1/6 -> 4/6). v1 is retained and is the prompt C13 will run. Reverted in commit
+a0c6cbb by git-based restore from 07fedc8 -- byte-identical to the original v1 text, not a
+hand-edit. Full v1-vs-v2 comparison, provenance for every number, and the caveats are written
+up permanently in eval/calibration_log.md's "Prompt Calibration Verdict" section (hand-written,
+outside the regenerable DEV_RUN_SUMMARY block, so a later run won't wipe it). Lesson recorded
+there: the n=5 spot-check that greenlit v2 was drawn only from the subset v2 was built to
+relax, so it was structurally incapable of surfacing the collateral cost -- validate any future
+prompt change on the full dev set, ambiguous and drift cases included.
+NEXT ACTION: C13 (locked test-set run) is UNBLOCKED, pending explicit human go-ahead. Per
+baseline §"Dev set vs locked test set", the test set is touched exactly once, at the end, in a
+single batch pass -- so do not start it without that go-ahead.
 NOT STARTED: C13, frontend, e2e testing, breaking/fixing pass, demo/video prep.
 
 ## The pairing-verification template (hard-won, proven in the pilot — reuse this)

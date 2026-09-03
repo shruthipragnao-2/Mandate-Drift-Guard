@@ -119,3 +119,65 @@ expected given it never had the bug.
 
 ## Decision 15 clearance, single-signal/legitimate subset: {'n_subset': 5, 'n_cleared': 1, 'cleared_case_ids': ['c145ecee-52a3-4a8f-89cf-dba926328fd8']}
 <!-- SECTION:DEV_RUN_SUMMARY:END -->
+
+---
+
+# Prompt Calibration Verdict — v1 vs v2 (decided 2026-09-03, human-approved)
+
+**Verdict: `prompt_version = "v1"` is retained, and is the prompt C13's locked test-set run will use.** v2 was tested against the full dev set and rejected. Reverted in commit `a0c6cbb` via a git-based restore from `07fedc8` (the commit preceding v2's `0c34a43`), so v1's `_SYSTEM_PROMPT` and `PROMPT_VERSION` are byte-identical to the originals rather than reconstructed by hand.
+
+This section is hand-written and permanent. It deliberately does **not** replace the `SECTION:DEV_RUN_SUMMARY` block above, which stays as the raw machine-written v2 record. Note that that block is regenerated in place by `eval/report.py` on every run, so once C13 or any later v1 run executes, it will be overwritten with v1 numbers and will no longer show the v2 figures quoted below. The v2 numbers are therefore restated here in full, with provenance, so this verdict remains readable after that happens.
+
+## Provenance of every number below
+
+| Column | Source | How to retrieve |
+|---|---|---|
+| **v1** | `eval/results/dev_report.json` as committed at `07fedc8` — the post-`created_at`-fix, pre-v2 run | `git show 07fedc8:eval/results/dev_report.json` |
+| **v2** | `eval/results/dev_report.json` as committed at `bef0bb7`; same figures as the DEV_RUN_SUMMARY block above | `git show bef0bb7:eval/results/dev_report.json` |
+
+Both runs: 34 cases, dev split only (the `eval/dataset_loader.py` split guard was never bypassed; the locked test set remains untouched), `threshold_T = 0.05`, model `claude-sonnet-5`. Every figure in the table below was read directly out of those two committed JSON artifacts — none is quoted from memory or session recollection.
+
+**Comparability check.** `eval/report.py` did change between the two runs (`bef0bb7`'s log-writer split), so this was verified rather than assumed: the diff touches only imports, additive fields inside `reliability_metrics` (`llm_status_counts`, `timeout_rate`), a new Decision 15 clearance diagnostic, and `main()`. The bodies of `primary_metrics`, `abstention_metrics`, `drift_cases_caught_only_by_hybrid`, and `gate_decision_distribution` are unmodified. Corroborating this, the `rules_only` rows are identical across both reports (fast_spike and slow_drift alike: TP=2 FP=2 FN=5 TN=5, F1=0.3636) — exactly as expected, since the prompt cannot affect the deterministic layer. The hybrid deltas below are attributable to the prompt change.
+
+## Comparison (hybrid layer; `rules_only` identical in both runs)
+
+| Metric | v1 | v2 | Direction |
+|---|---|---|---|
+| fast_spike TP/FP/FN/TN | 7 / 7 / 0 / 0 | 6 / 7 / 1 / 0 | worse |
+| fast_spike P / R / F1 | 0.5000 / 1.0000 / 0.6667 | 0.4615 / 0.8571 / 0.6000 | worse |
+| fast_spike FPR | 1.0000 | 1.0000 | unchanged |
+| slow_drift TP/FP/FN/TN | 7 / 7 / 0 / 0 | 7 / 6 / 0 / 1 | better |
+| slow_drift P / R / F1 | 0.5000 / 1.0000 / 0.6667 | 0.5385 / 1.0000 / 0.7000 | better |
+| slow_drift FPR | 1.0000 | 0.8571 | better |
+| §9 drift caught only by hybrid | 10 | 9 | worse |
+| §12 ambiguous `correct_abstention_rate` | 0.6667 (4/6) | 0.1667 (1/6) | **much worse** |
+| §12 ambiguous `overconfidence_on_ambiguous_rate` | 0.1667 (1/6) | 0.6667 (4/6) | **much worse** |
+| §12 legitimate `unnecessary_hold_rate` (n=14) | 1.0000 | 0.9286 | better |
+| §8 gate distribution allow / hold / none | 0.029 / 0.941 / 0.029 | 0.176 / 0.794 / 0.029 | (see below) |
+| §16 `schema_validation_pass_rate` | 0.8485 (28/33) | 1.0000 (33/33) | better |
+| §14 gate-rule violations | 0 | 0 | unchanged |
+| §15 audit completeness | 34/34 | 34/34 | unchanged |
+
+The single new false negative under v2 is `fixtures/drift/pair_013_fast_spike_single_telephone_drift.json`, which v2 gate-decided `allow`. Verified directly from `eval/results/dev_run_results.json`: it is the only `ground_truth_label == "drift"` case whose hybrid `gate_decision != "hold"`, and v1's report records `fn = 0` for fast_spike, so this case was held under v1 and is genuinely new under v2.
+
+## What v2 did as designed
+
+v2's stated goal was to counter the medium-risk anchoring diagnosed in the postmortem above, and directionally it worked: allow-decisions rose from 1/34 to 6/34, holds fell from 32/34 to 27/34, `unnecessary_hold_rate` on legitimate cases improved, and slow_drift picked up a true negative (FPR 1.0 → 0.857, F1 0.6667 → 0.7000). The 5-case spot-check recorded in `0c34a43` (`eval/results/prompt_v2_validation_5case.json`, retained as a real result) pointed the same way. The mechanism was sound.
+
+## Why it was rejected anyway
+
+The loosening was indiscriminate. It did not selectively relax the cases that deserved relaxing — it moved the model's whole risk posture, and the cases it wrongly relaxed cost more than the ones it rightly relaxed gained:
+
+- **Ambiguous-case abstention collapsed.** This is the sharpest result in the table: `correct_abstention_rate` fell 4/6 → 1/6 while `overconfidence_on_ambiguous_rate` rose 1/6 → 4/6. v2 made the model *confidently wrong* on exactly the cases the design wants it to decline to call. For a fail-closed system whose entire premise is bounded, honest uncertainty, this is the most expensive thing v2 could have broken.
+- **A new false negative**, `pair_013_fast_spike_single_telephone_drift` — a drift case released as `allow`. Under a fail-closed mandate, a missed drift is a categorically worse error than an unnecessary hold.
+- **Net detection went down**, not up: §9 fell 10 → 9.
+- **The gain was one-sided.** slow_drift improved; fast_spike regressed (F1 0.6667 → 0.6000). Not a wash across subsets — a trade, and not a favourable one.
+
+An encouraging n=5 spot-check did not survive n=34. That is the reusable lesson here: the 5-case sample was drawn from the single-signal/legitimate subset — precisely the cases v2 was built to relax — so it could only ever have confirmed the hypothesis. It measured the intended effect while being structurally blind to the collateral cost. Any future prompt iteration gets validated on the full dev set, including ambiguous and drift cases, before it is considered.
+
+## Caveats, stated rather than glossed
+
+- **Single run per prompt version, n=34, nondeterministic LLM.** No repeated runs, no confidence intervals. The 1-case deltas (§9's 10 → 9, the fast_spike FN) are individually within plausible run-to-run sampling noise and should not be over-read on their own. The abstention collapse (4/6 → 1/6, with the mirrored overconfidence rise) is a much larger swing and is the finding this verdict actually rests on.
+- **`schema_validation_pass_rate` favours v2** (0.8485 → 1.0000) and is reported here rather than omitted, since it cuts against the verdict. The formula is unchanged between runs, so it is a real observation; but with one run each it may be sampling variance rather than a property of the prompt. It was not treated as decisive either way.
+- **v1's reliability block lacks `llm_status_counts` and `timeout_rate`** — those fields did not exist at `07fedc8`. Those two v2 figures have no v1 counterpart and are therefore excluded from the table rather than compared against an assumed value.
+- **The prior dev-set summary in this log was overwritten** by the v2 run before this section existed (the DEV_RUN_SUMMARY block is regenerable). The v1 column above is reconstructed from the committed `07fedc8` JSON artifact, which is why provenance is spelled out above: it is recoverable from git, not from this log's own history.
