@@ -19,16 +19,20 @@ Fail-closed on any uncertainty. FastAPI + Postgres + Alembic, no queue, no agent
   evidence engine (backend/app/domain/evidence_engine/), never hand-calculated.
 - Commit after every checkpoint. Do not leave work uncommitted across sessions.
 
-## Checkpoint status (as of 2026-09-02, ~11pm)
-DONE: C5 (repo foundation), C6 (domain model + DB schema, Decisions 4-8),
-C7+C8 (evidence engine signals, Decisions 9-12), C9 (LLM integration, Decisions 13-14),
-C10 (policy gate, Decision 15). M5 pilot batch (3 pairs + 1 ambiguous case) generated and
-verified. Decision 16 locked (single-period-window scope, no renewal logic). M5 full-scale
-dataset generation DONE: 100 fixture files (42 pairs + 16 ambiguous), 0 Stage B rejections,
-`dataset_cases` populated with exactly 100 rows (dev=34/test=66) via real Alembic-migrated
-Postgres. See eval/generation_log.md for the full run.
-NOT STARTED: C11+C12 (eval harness + API integration), confidence calibration, C13 (locked
-test-set run), frontend, e2e testing, breaking/fixing pass, demo/video prep.
+## Checkpoint status (as of 2026-09-03, evening)
+DONE: C5, C6 (Decisions 4-8), C7+C8 (Decisions 9-12), C9 (Decisions 13-14), C10 (Decision 15),
+M5 dataset (100 cases + archived pilot, Decision 16), C11 (orchestrator + eval harness,
+Decisions 17-18), C12 (API layer).
+IN PROGRESS: prompt calibration. Found and fixed a real bug -- eval/run.py wasn't passing
+fixture created_at to the DB Mandate row, corrupting velocity signals dev-set-wide. Fixed via
+eval/dataset_loader.py's persist_case_mandate() (single source of truth now). Tested
+prompt_version "v2" against the anchoring bias found in v1 (LLM rarely reports risk_level=
+"low"); v2 showed mixed results on the full dev set (marginal slow_drift gain, no fast_spike
+gain, one new false negative, real regression in ambiguous-case abstention) -- decision: v1
+retained, v2 documented as tested-and-rejected in eval/calibration_log.md.
+NEXT ACTION: revert semantic_risk_client.py's prompt to v1 exactly, confirm tests pass,
+commit. Then C13 (locked test-set run) is unblocked. Full history: eval/calibration_log.md.
+NOT STARTED: C13, frontend, e2e testing, breaking/fixing pass, demo/video prep.
 
 ## The pairing-verification template (hard-won, proven in the pilot — reuse this)
 Signal-first, not narrative-first: pick target bands → backward-solve exact numbers
@@ -63,3 +67,4 @@ LABELING_RUBRIC.md
 ## Model pin
 claude-sonnet-5 (Decision 13). Retry policy: no retry on malformed output, exactly one
 retry on transport/5xx errors (Decision 14).
+
