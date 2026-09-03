@@ -54,8 +54,8 @@
   "drift_cases_caught_only_by_hybrid": 10,
   "abstention_metrics": {
     "n_ambiguous": 6,
-    "correct_abstention_rate": 1.0,
-    "overconfidence_on_ambiguous_rate": 0.0,
+    "correct_abstention_rate": 0.6666666666666666,
+    "overconfidence_on_ambiguous_rate": 0.16666666666666666,
     "n_legitimate": 14,
     "unnecessary_hold_rate": 1.0
   },
@@ -66,14 +66,14 @@
     "rate": 1.0
   },
   "reliability_metrics": {
-    "llm_calls": 34,
-    "schema_validation_pass_rate": 1.0,
+    "llm_calls": 33,
+    "schema_validation_pass_rate": 0.8484848484848485,
     "pipeline_error_rate": 0.0,
     "pipeline_error_count": 0
   },
   "gate_decision_distribution": {
-    "allow": 0.0,
-    "hold": 1.0,
-    "none": 0.0
+    "allow": 0.029411764705882353,
+    "hold": 0.9411764705882353,
+    "none": 0.029411764705882353
   }
 }

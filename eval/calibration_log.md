@@ -26,3 +26,66 @@ Rule swept (eval-design §5, exact): `IF velocity == elevated AND category_shift
 TP=4, FP=4, FN=10, TN=10, Precision=0.5000, Recall=0.2857.
 
 This value is read by `eval/run.py` when scoring the rules-only baseline -- not re-swept or hardcoded a second time.
+
+---
+
+## Postmortem: `eval/run.py`'s `mandate.created_at` bug (found 2026-09-03, fixed same day)
+
+**The bug.** `eval/run.py`'s `_run_hybrid()` constructed the DB `Mandate` row inline
+(`models.Mandate(purpose=..., budget=..., period_days=..., allowed_categories=...)`) and
+never passed `created_at`. Since `Mandate.created_at` has `server_default=func.now()`, every
+mandate silently got the real wall-clock time the script happened to run at (e.g.
+2026-09-03T13:22Z) instead of the fixture's intended `2026-08-01T00:00Z`. Every fixture's
+transactions occur *before* that real insert time, so `compute_velocity`'s
+`days_elapsed = max(1, (as_of - mandate.created_at).days)` floored to 1 for every single dev
+case — inflating `expected_fraction` (and therefore the velocity ratio) far beyond what the
+dataset was designed to produce.
+
+**How it was found.** A read-only diagnostic request (print per-case LLM output, sorted by
+triggering-signal count) cross-checked the stored `triggering_signals` against a direct
+recomputation from the fixture files and found a mismatch on the very first case compared.
+Widening the check confirmed it was systematic, not isolated: all 10 of the dataset's
+`slow_drift`-single-signal pairs — deliberately built with `velocity="normal"` so that
+`category_shift` was the *only* intended trigger — showed `spend_velocity` triggering anyway
+in the stored C11 run.
+
+**Scope confirmed by audit** (human-requested, 2026-09-03): of the four sites that construct a
+Mandate object from fixture JSON, only `eval/run.py` had this bug. `eval/calibrate_baseline.py`
+never constructs a DB row at all — it only ever consumed `CaseRecord.mandate`
+(`eval/dataset_loader.py`'s `_Mandate` dataclass), whose `created_at` was always correctly
+parsed from the fixture. `eval/populate_dataset_cases.py` never constructs a Mandate object at
+all (it only writes `dataset_cases` rows). `backend/tests/integration/conftest.py`'s
+`make_mandate` fixture doesn't load fixture JSON at all — a different, legitimate
+explicit-override pattern for hand-built test data, not a bug.
+
+**The fix — structural, not a one-line patch.** `eval/dataset_loader.py` gained
+`persist_case_mandate(session, case)`, the single sanctioned way to materialize a
+`CaseRecord`'s mandate as a real DB row (`created_at=m.created_at` included, by construction).
+`eval/run.py` now calls it instead of constructing `models.Mandate(...)` inline — the
+duplication between "the loader parses fixtures correctly" and "`eval/run.py` re-does that
+parsing by hand, differently" is what let this bug exist in the first place, so the fix
+removes the second code path entirely rather than patching its missing field.
+
+**Effect on results, confirmed by a fresh dev-set run post-fix.** The 10 `slow_drift`-single
+pairs now show ONLY `category_shift` (+ `clustering` for some members) triggering —
+`spend_velocity` no longer appears in any of them, matching the dataset's intended design
+exactly. A direct recomputation from every one of the 34 dev fixtures now matches the stored
+run's `triggering_signals` with **0 mismatches** (previously mismatched on every case with a
+`slow_drift`-single or ambiguous-category_shift-boundary shape). One case
+(`ambiguous_009_category_shift_boundary_household_essentials`, ratio exactly 0.05, the
+none/minor boundary's "none" side) now correctly never crosses the threshold at all, and — for
+the first time across the pilot and this dev-set run — Decision 15's bounded-downgrade path was
+genuinely exercised and produced an ALLOW
+(`ambiguous_011_category_shift_boundary_telephone`: single mild `category_shift` signal,
+`risk_level=low`, `confidence=0.72`, `mandate_alignment=medium`).
+
+**The C11 report's headline finding is retracted.** "The hybrid system HOLDs on all 34 dev
+cases (FPR=1.0 on both drift-type subsets)" was reported as a genuine LLM-calibration finding.
+It was at least partly an artifact of this bug corrupting the evidence packets before they
+ever reached the LLM, not solely a measurement of LLM behavior. The corrected numbers are
+reported in this same log's next dev-set run entry (or the accompanying report — see
+`eval/results/dev_report.json` for the machine-readable version of the corrected metrics).
+
+**Rules-only baseline unaffected.** `eval/calibrate_baseline.py`'s sweep table above is
+byte-for-byte identical before and after this fix (confirmed by re-running it), exactly as
+expected given it never had the bug.

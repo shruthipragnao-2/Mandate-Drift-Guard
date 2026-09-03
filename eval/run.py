@@ -29,7 +29,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from calibrate_baseline import calibrate  # noqa: E402
-from dataset_loader import CaseRecord, load_dev_cases  # noqa: E402
+from dataset_loader import CaseRecord, load_dev_cases, persist_case_mandate  # noqa: E402
 
 from app.config import settings  # noqa: E402
 from app.db import models  # noqa: E402
@@ -43,12 +43,10 @@ RESULTS_DIR = REPO_ROOT / "eval" / "results"
 
 
 def _run_hybrid(session, case: CaseRecord) -> dict:
-    m = case.mandate
-    mandate_row = models.Mandate(
-        purpose=m.purpose, budget=m.budget, period_days=m.period_days, allowed_categories=m.allowed_categories
-    )
-    session.add(mandate_row)
-    session.flush()
+    # Centralized in eval/dataset_loader.py (2026-09-03 fix) -- this used to construct
+    # models.Mandate(...) inline here and silently dropped created_at, which floored
+    # every case's velocity days_elapsed to 1 (see eval/calibration_log.md's postmortem).
+    mandate_row = persist_case_mandate(session, case)
 
     *historical_raw, incoming_raw = case.transactions
     historical_rows = []

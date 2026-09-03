@@ -21,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_DIR = REPO_ROOT / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
+from app.db import models  # noqa: E402
 from app.db.models import DatasetCase  # noqa: E402
 
 
@@ -119,3 +120,34 @@ def load_dev_cases(session) -> list[CaseRecord]:
     rows = session.query(DatasetCase).filter(DatasetCase.split == "dev").all()
     _assert_no_test_split(rows)  # defense in depth against a future query-filter bug
     return [_to_case_record(row) for row in rows]
+
+
+def persist_case_mandate(session, case: CaseRecord) -> models.Mandate:
+    """The ONLY sanctioned way to materialize a `CaseRecord`'s mandate as a real, persisted
+    `models.Mandate` row -- added 2026-09-03 after `eval/run.py` was found constructing its
+    own `models.Mandate(...)` inline and omitting `created_at`, silently defaulting it to the
+    DB's `server_default=func.now()` (real wall-clock insert time) instead of the fixture's
+    intended value. Since every fixture's transactions occur *before* that real insert time,
+    `compute_velocity`'s `days_elapsed = max(1, (as_of - created_at).days)` floored to 1 for
+    every single case, inflating velocity ratios across the board (see the postmortem in
+    eval/calibration_log.md for the full account and confirmed scope).
+
+    `eval/calibrate_baseline.py` never had this bug -- it never constructs a DB `Mandate` row
+    at all, only consuming `CaseRecord.mandate` (the plain `_Mandate` dataclass above, whose
+    `created_at` was always correctly parsed from the fixture). This function exists so
+    `eval/run.py` (the one caller that DOES need a real persisted row, since
+    `domain.pipeline.run_pipeline` writes FK-referencing rows against it) has no reason to
+    ever construct `models.Mandate` by hand again -- one field list, one place, matching
+    `CaseRecord.mandate` exactly, `created_at` included.
+    """
+    m = case.mandate
+    mandate_row = models.Mandate(
+        purpose=m.purpose,
+        budget=m.budget,
+        period_days=m.period_days,
+        allowed_categories=m.allowed_categories,
+        created_at=m.created_at,
+    )
+    session.add(mandate_row)
+    session.flush()
+    return mandate_row
