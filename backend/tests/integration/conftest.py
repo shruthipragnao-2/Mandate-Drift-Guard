@@ -49,6 +49,32 @@ def engine():
 
 
 @pytest.fixture
+def api_client(db_session, monkeypatch):
+    """A `TestClient` (Checkpoint C12) wired to THIS test's `db_session` -- so API-layer
+    requests share the same savepoint-scoped, auto-rolled-back transaction as the rest of the
+    test, rather than opening a second, unrelated connection to `settings.database_url` via
+    the app's real `get_db`. A fixed bearer token is set for the duration of the test via
+    `monkeypatch` (auto-restored after), so auth-path tests have a known-good value to send.
+    """
+    from fastapi.testclient import TestClient
+
+    from app.config import settings as app_settings
+    from app.db.session import get_db
+    from app.main import app
+
+    monkeypatch.setattr(app_settings, "api_bearer_token", "test-bearer-token")
+
+    def _override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_get_db
+    try:
+        yield TestClient(app)
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture
 def db_session(engine):
     """One connection + outer transaction per test, rolled back at teardown -- keeps tests
     isolated from each other without recreating the schema for every test. Tests that expect

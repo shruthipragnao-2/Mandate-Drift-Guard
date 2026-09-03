@@ -1,0 +1,38 @@
+"""Bearer-token authentication (Checkpoint C12, Decision 17).
+
+A single shared static secret, per architecture's already-locked single-bearer-token
+mechanism -- no per-user auth, no user table exists (baseline §12: "Authorization: no RBAC --
+a single Ops-analyst role is assumed, named openly ... as a demo-scale simplification").
+Decision 17 (docs/IMPLEMENTATION-BASELINE.md §22) extends this token's scope from
+HOLD-resolution only to also cover ingestion (`POST /transactions`).
+
+The token value is read from `app.config.settings.api_bearer_token` (environment-sourced,
+`.env`, gitignored) -- never hardcoded, never logged, never included in any exception detail.
+
+Status code convention (this checkpoint's own instruction: "401/403 on missing/invalid bearer
+token"): no `Authorization` header at all -> 401 ("who are you"); a header present but the
+wrong token -> 403 ("I know who's asking, and it's not authorized").
+"""
+
+from __future__ import annotations
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from app.config import settings
+
+_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def require_bearer_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> None:
+    if settings.api_bearer_token is None:
+        # Fail closed: an unconfigured token means auth can never succeed, not that it's
+        # silently skipped -- consistent with the fail-closed philosophy applied everywhere
+        # else in this project (baseline §6).
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="bearer token not configured")
+    if credentials is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing bearer token")
+    if credentials.credentials != settings.api_bearer_token:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="invalid bearer token")

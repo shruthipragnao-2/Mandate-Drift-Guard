@@ -38,6 +38,20 @@ class Settings(BaseSettings):
     # anywhere by this codebase.
     anthropic_api_key: str | None = None
 
+    # Decision 17 (2026-09-02, docs/IMPLEMENTATION-BASELINE.md §22): the single shared static
+    # bearer-token secret (architecture's already-locked single-bearer-token mechanism -- no
+    # per-user auth, no user table) now gates BOTH POST /transactions and
+    # POST /cases/{id}/resolve, not just resolution. Read from the API_BEARER_TOKEN
+    # environment variable (.env, gitignored); None by default so importing this module never
+    # requires it -- only `app.auth.require_bearer_token` actually checks it, and treats an
+    # unconfigured token as "auth can never succeed" (fail-closed), not "auth is skipped".
+    # This is a credential, not a tunable threshold, so it lives here in `Settings` (the
+    # existing pattern for env-sourced secrets, matching `anthropic_api_key` exactly) rather
+    # than as a separate versioned `BaseModel` like `EvidenceEngineThresholds` and friends --
+    # there is no "rule_version" concept for a static secret. Never logged, printed, or
+    # otherwise written out anywhere by this codebase.
+    api_bearer_token: str | None = None
+
 
 settings = Settings()
 
