@@ -58,7 +58,7 @@ class TestRealApiSmoke:
         assert 0.0 <= outcome.llm_output.confidence <= 1.0
         assert isinstance(outcome.llm_output.evidence, list) and outcome.llm_output.evidence
         assert outcome.model_version == "claude-sonnet-5"
-        assert outcome.prompt_version == "v2"
+        assert outcome.prompt_version == "v1"
         print("\n--- clear drift case ---")
         print(outcome.llm_output.model_dump_json(indent=2))
         print(f"latency_ms={outcome.latency_ms:.1f}")
