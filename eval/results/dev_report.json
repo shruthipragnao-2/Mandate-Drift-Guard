@@ -1,6 +1,7 @@
 {
   "n_cases": 34,
   "threshold_t": 0.05,
+  "prompt_version": "v2",
   "primary_metrics": {
     "fast_spike": {
       "rules_only": {
@@ -15,15 +16,15 @@
         "fnr": 0.7142857142857143
       },
       "hybrid": {
-        "tp": 7,
+        "tp": 6,
         "fp": 7,
-        "fn": 0,
+        "fn": 1,
         "tn": 0,
-        "precision": 0.5,
-        "recall": 1.0,
-        "f1": 0.6666666666666666,
+        "precision": 0.46153846153846156,
+        "recall": 0.8571428571428571,
+        "f1": 0.6,
         "fpr": 1.0,
-        "fnr": 0.0
+        "fnr": 0.14285714285714285
       }
     },
     "slow_drift": {
@@ -40,24 +41,24 @@
       },
       "hybrid": {
         "tp": 7,
-        "fp": 7,
+        "fp": 6,
         "fn": 0,
-        "tn": 0,
-        "precision": 0.5,
+        "tn": 1,
+        "precision": 0.5384615384615384,
         "recall": 1.0,
-        "f1": 0.6666666666666666,
-        "fpr": 1.0,
+        "f1": 0.7000000000000001,
+        "fpr": 0.8571428571428571,
         "fnr": 0.0
       }
     }
   },
-  "drift_cases_caught_only_by_hybrid": 10,
+  "drift_cases_caught_only_by_hybrid": 9,
   "abstention_metrics": {
     "n_ambiguous": 6,
-    "correct_abstention_rate": 0.6666666666666666,
-    "overconfidence_on_ambiguous_rate": 0.16666666666666666,
+    "correct_abstention_rate": 0.16666666666666666,
+    "overconfidence_on_ambiguous_rate": 0.6666666666666666,
     "n_legitimate": 14,
-    "unnecessary_hold_rate": 1.0
+    "unnecessary_hold_rate": 0.9285714285714286
   },
   "gate_rule_violation_count": 0,
   "audit_completeness": {
@@ -67,13 +68,24 @@
   },
   "reliability_metrics": {
     "llm_calls": 33,
-    "schema_validation_pass_rate": 0.8484848484848485,
+    "llm_status_counts": {
+      "success": 33
+    },
+    "schema_validation_pass_rate": 1.0,
+    "timeout_rate": 0.0,
     "pipeline_error_rate": 0.0,
     "pipeline_error_count": 0
   },
   "gate_decision_distribution": {
-    "allow": 0.029411764705882353,
-    "hold": 0.9411764705882353,
+    "allow": 0.17647058823529413,
+    "hold": 0.7941176470588235,
     "none": 0.029411764705882353
+  },
+  "decision15_single_signal_legitimate_clearance": {
+    "n_subset": 5,
+    "n_cleared": 1,
+    "cleared_case_ids": [
+      "c145ecee-52a3-4a8f-89cf-dba926328fd8"
+    ]
   }
 }

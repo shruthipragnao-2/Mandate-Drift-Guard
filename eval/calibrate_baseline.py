@@ -21,7 +21,7 @@ BACKEND_DIR = REPO_ROOT / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from dataset_loader import CaseRecord, load_dev_cases  # noqa: E402
+from dataset_loader import CaseRecord, load_dev_cases, upsert_log_section  # noqa: E402
 
 from app.db.session import SessionLocal  # noqa: E402
 from app.domain.evidence_engine.category_shift import CategoryShiftResult, compute_category_shift  # noqa: E402
@@ -155,7 +155,10 @@ def _write_calibration_log(n_legit, n_drift, sweep_results, best_threshold, best
         "",
         POSTMORTEM,
     ]
-    (REPO_ROOT / "eval" / "calibration_log.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # eval/calibration_log.md also carries eval/run.py's own dev-set-run-summary section
+    # (written independently by that script) -- upsert_log_section updates only THIS section
+    # in place so re-running this script never wipes that one, and vice versa.
+    upsert_log_section(REPO_ROOT / "eval" / "calibration_log.md", "CALIBRATION_SWEEP", "\n".join(lines))
 
 
 # Permanent historical record, deliberately baked into the log-writer itself (not appended by

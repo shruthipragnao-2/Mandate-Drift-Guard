@@ -122,6 +122,32 @@ def load_dev_cases(session) -> list[CaseRecord]:
     return [_to_case_record(row) for row in rows]
 
 
+def upsert_log_section(path: Path, marker: str, content: str) -> None:
+    """Replace the named section in `path` if one already exists, else append it -- shared by
+    eval/calibrate_baseline.py's sweep-table writer and eval/run.py's dev-set-run-summary
+    writer so BOTH can maintain their own permanent, always-current section of
+    eval/calibration_log.md without one script's re-run silently wiping the other's content
+    (the file used to be fully overwritten by a single `.write_text(...)` call, which only
+    ever had one writer; it now has two). Sections are delimited by HTML comment markers, so
+    re-running either writer updates its own block in place and leaves the rest of the file,
+    and its position in reading order, untouched.
+    """
+    start = f"<!-- SECTION:{marker}:START -->"
+    end = f"<!-- SECTION:{marker}:END -->"
+    block = f"{start}\n{content}\n{end}\n"
+
+    existing = path.read_text(encoding="utf-8") if path.exists() else ""
+    if start in existing and end in existing:
+        pre, _, rest = existing.partition(start)
+        _, _, post = rest.partition(end)
+        new_content = pre + block + post
+    else:
+        separator = "" if not existing or existing.endswith("\n\n") else ("\n" if existing.endswith("\n") else "\n\n")
+        new_content = existing + separator + block
+
+    path.write_text(new_content, encoding="utf-8")
+
+
 def persist_case_mandate(session, case: CaseRecord) -> models.Mandate:
     """The ONLY sanctioned way to materialize a `CaseRecord`'s mandate as a real, persisted
     `models.Mandate` row -- added 2026-09-03 after `eval/run.py` was found constructing its

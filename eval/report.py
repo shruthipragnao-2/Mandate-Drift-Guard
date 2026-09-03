@@ -18,10 +18,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BACKEND_DIR = REPO_ROOT / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from dataset_loader import upsert_log_section  # noqa: E402
 
 from app.config import GATE_POLICY_CONFIG  # noqa: E402
+from app.domain.semantic_risk_client import PROMPT_VERSION  # noqa: E402
 
 RESULTS_PATH = REPO_ROOT / "eval" / "results" / "dev_run_results.json"
+CALIBRATION_LOG_PATH = REPO_ROOT / "eval" / "calibration_log.md"
 
 
 def _flagged(gate_decision: str | None) -> bool:
@@ -152,14 +157,24 @@ def drift_cases_caught_only_by_hybrid(cases: list[dict]) -> int:
 def reliability_metrics(cases: list[dict]) -> dict:
     """eval-design §16, the subset computable without a retry counter (not tracked by
     semantic_risk_client's return type -- Decision 14 makes retries transport-only and
-    invisible to the outcome status): schema-validation pass rate and pipeline error rate."""
+    invisible to the outcome status): schema-validation pass rate and pipeline error rate.
+    Also breaks out `llm_status` counts (success/timeout/malformed/transport_error) and a
+    timeout rate specifically -- a single genuinely slow run can otherwise hide inside a
+    pass-rate average."""
     triggered = [c for c in cases if not c.get("pipeline_error") and (c["hybrid"] or {}).get("threshold_crossed")]
     llm_calls = len(triggered)
-    successes = sum(1 for c in triggered if c["hybrid"]["llm_status"] == "success")
+    status_counts: dict[str, int] = {}
+    for c in triggered:
+        status = c["hybrid"]["llm_status"]
+        status_counts[status] = status_counts.get(status, 0) + 1
+    successes = status_counts.get("success", 0)
+    timeouts = status_counts.get("timeout", 0)
     errors = sum(1 for c in cases if c.get("pipeline_error"))
     return {
         "llm_calls": llm_calls,
+        "llm_status_counts": status_counts,
         "schema_validation_pass_rate": successes / llm_calls if llm_calls else None,
+        "timeout_rate": timeouts / llm_calls if llm_calls else None,
         "pipeline_error_rate": errors / len(cases) if cases else None,
         "pipeline_error_count": errors,
     }
@@ -174,6 +189,31 @@ def gate_decision_distribution(cases: list[dict]) -> dict:
         decision = hybrid.get("gate_decision")
         counts["none" if decision is None else decision] += 1
     return {k: (v / total if total else None) for k, v in counts.items()}
+
+
+def single_signal_legitimate_decision15_clearance(cases: list[dict], confidence_floor: float) -> dict:
+    """Not an eval-design §7-18 formula -- a diagnostic specific to this project's Decision 15
+    bounded-downgrade path (docs/IMPLEMENTATION-BASELINE.md §20). Filters to
+    triggering_signal_count==1 AND ground_truth_label=="legitimate" (the only subset where the
+    downgrade is even structurally reachable AND where the ground truth says it SHOULD
+    ideally fire), and reports how many clear all three of Decision 15's conditions:
+    risk_level=="low", confidence>=confidence_floor, mandate_alignment!="low"."""
+    subset = [
+        c for c in cases
+        if len((c["hybrid"] or {}).get("triggering_signals") or []) == 1
+        and c["ground_truth_label"] == "legitimate"
+    ]
+    cleared = []
+    for c in subset:
+        h = c["hybrid"] or {}
+        if (
+            h.get("risk_level") == "low"
+            and h.get("confidence") is not None
+            and h["confidence"] >= confidence_floor
+            and h.get("mandate_alignment") != "low"
+        ):
+            cleared.append(c["case_id"])
+    return {"n_subset": len(subset), "n_cleared": len(cleared), "cleared_case_ids": cleared}
 
 
 def main() -> None:
@@ -219,9 +259,14 @@ def main() -> None:
     distribution = gate_decision_distribution(cases)
     print(f"  {distribution}")
 
+    print("\n--- Decision 15 clearance: single-signal/legitimate subset ---")
+    decision15 = single_signal_legitimate_decision15_clearance(cases, GATE_POLICY_CONFIG.confidence_floor)
+    print(f"  {decision15}")
+
     report = {
         "n_cases": len(cases),
         "threshold_t": threshold_t,
+        "prompt_version": PROMPT_VERSION,
         "primary_metrics": primary,
         "drift_cases_caught_only_by_hybrid": caught_only_by_hybrid,
         "abstention_metrics": abstention,
@@ -229,10 +274,55 @@ def main() -> None:
         "audit_completeness": audit,
         "reliability_metrics": reliability,
         "gate_decision_distribution": distribution,
+        "decision15_single_signal_legitimate_clearance": decision15,
     }
     out_path = REPO_ROOT / "eval" / "results" / "dev_report.json"
     out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"\nwrote full report to {out_path.relative_to(REPO_ROOT)}")
+
+    _write_dev_run_summary_to_log(report, primary)
+
+
+def _write_dev_run_summary_to_log(report: dict, primary: dict) -> None:
+    """Permanent, always-current dev-set-run summary section of eval/calibration_log.md --
+    baked into this script's own write path (via upsert_log_section, not a one-off manual
+    edit) so every future `eval/report.py` run keeps this section up to date without
+    disturbing eval/calibrate_baseline.py's sweep-table section elsewhere in the same file."""
+    lines = [
+        f"# Dev-Set Run Summary — prompt_version=\"{report['prompt_version']}\"",
+        "",
+        f"*eval/run.py + eval/report.py, run against the DEV SET ONLY "
+        f"(eval/dataset_loader.py's hard split guard) -- the locked test set was never "
+        f"touched. {report['n_cases']} cases, rules-only threshold_T={report['threshold_t']}.*",
+        "",
+        "## §7 Primary metrics (precision/recall/F1/FPR), by drift_type",
+        "",
+    ]
+    for drift_type, systems in primary.items():
+        lines.append(f"**{drift_type}**")
+        for system_name, m in systems.items():
+            lines.append(
+                f"- {system_name}: TP={m['tp']} FP={m['fp']} FN={m['fn']} TN={m['tn']} "
+                f"P={m['precision']:.4f} R={m['recall']:.4f} F1={m['f1']:.4f} FPR={m['fpr']:.4f}"
+            )
+        lines.append("")
+    lines += [
+        f"## §8 Gate-decision distribution (hybrid): {report['gate_decision_distribution']}",
+        "",
+        f"## §9 Drift_cases_caught_only_by_hybrid: {report['drift_cases_caught_only_by_hybrid']}",
+        "",
+        f"## §12 Abstention metrics: {report['abstention_metrics']}",
+        "",
+        f"## §14 Gate-rule-violation count (measured, target 0): {report['gate_rule_violation_count']}",
+        "",
+        f"## §15 Audit completeness: {report['audit_completeness']}",
+        "",
+        f"## §16 Reliability: {report['reliability_metrics']}",
+        "",
+        f"## Decision 15 clearance, single-signal/legitimate subset: "
+        f"{report['decision15_single_signal_legitimate_clearance']}",
+    ]
+    upsert_log_section(CALIBRATION_LOG_PATH, "DEV_RUN_SUMMARY", "\n".join(lines))
 
 
 if __name__ == "__main__":

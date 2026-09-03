@@ -89,3 +89,33 @@ reported in this same log's next dev-set run entry (or the accompanying report �
 **Rules-only baseline unaffected.** `eval/calibrate_baseline.py`'s sweep table above is
 byte-for-byte identical before and after this fix (confirmed by re-running it), exactly as
 expected given it never had the bug.
+
+<!-- SECTION:DEV_RUN_SUMMARY:START -->
+# Dev-Set Run Summary — prompt_version="v2"
+
+*eval/run.py + eval/report.py, run against the DEV SET ONLY (eval/dataset_loader.py's hard split guard) -- the locked test set was never touched. 34 cases, rules-only threshold_T=0.05.*
+
+## §7 Primary metrics (precision/recall/F1/FPR), by drift_type
+
+**fast_spike**
+- rules_only: TP=2 FP=2 FN=5 TN=5 P=0.5000 R=0.2857 F1=0.3636 FPR=0.2857
+- hybrid: TP=6 FP=7 FN=1 TN=0 P=0.4615 R=0.8571 F1=0.6000 FPR=1.0000
+
+**slow_drift**
+- rules_only: TP=2 FP=2 FN=5 TN=5 P=0.5000 R=0.2857 F1=0.3636 FPR=0.2857
+- hybrid: TP=7 FP=6 FN=0 TN=1 P=0.5385 R=1.0000 F1=0.7000 FPR=0.8571
+
+## §8 Gate-decision distribution (hybrid): {'allow': 0.17647058823529413, 'hold': 0.7941176470588235, 'none': 0.029411764705882353}
+
+## §9 Drift_cases_caught_only_by_hybrid: 9
+
+## §12 Abstention metrics: {'n_ambiguous': 6, 'correct_abstention_rate': 0.16666666666666666, 'overconfidence_on_ambiguous_rate': 0.6666666666666666, 'n_legitimate': 14, 'unnecessary_hold_rate': 0.9285714285714286}
+
+## §14 Gate-rule-violation count (measured, target 0): 0
+
+## §15 Audit completeness: {'total': 34, 'complete': 34, 'rate': 1.0}
+
+## §16 Reliability: {'llm_calls': 33, 'llm_status_counts': {'success': 33}, 'schema_validation_pass_rate': 1.0, 'timeout_rate': 0.0, 'pipeline_error_rate': 0.0, 'pipeline_error_count': 0}
+
+## Decision 15 clearance, single-signal/legitimate subset: {'n_subset': 5, 'n_cleared': 1, 'cleared_case_ids': ['c145ecee-52a3-4a8f-89cf-dba926328fd8']}
+<!-- SECTION:DEV_RUN_SUMMARY:END -->
