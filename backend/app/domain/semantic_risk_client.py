@@ -33,11 +33,21 @@ from app.schemas.llm_output import LlmOutput
 
 TOOL_NAME = "emit_risk_assessment"
 
-# [IMPL DETAIL]: only the version TAG below is meaningful right now. The prompt WORDING is
-# expected to be iterated during dev-set calibration (a later milestone, not this checkpoint)
-# -- changing the wording must bump this constant, per baseline §5's prompt_version tracking
+# Prompt calibration fix (human-approved 2026-09-03, recorded as prompt_version="v2" -- NOT a
+# new numbered Decision; the prompt WORDING was already flagged at C9 as [IMPL DETAIL],
+# expected to be iterated during dev-set calibration, and this is exactly that iteration).
+# Diagnosis this fixes: v1 never told the model it is only ever invoked because a signal
+# already left its normal band -- every case it saw was pre-filtered to "something looked
+# unusual," with nothing distinguishing "invoked, but actually mild" from "invoked, therefore
+# concerning." That produced a systematic pull toward risk_level="medium" and never "low",
+# independent of case severity (see eval/calibration_log.md's dev-set postmortem). v2 adds
+# explicit base-rate framing and risk_level calibration guidance -- it does NOT touch the tool
+# schema, the evidence packet contents, or add few-shot examples/worked cases (baseline §5
+# remains LOCKED: no retrieval, no chat history, no few-shot examples in MVP).
+#
+# Changing the wording must bump this constant, per baseline §5's prompt_version tracking
 # requirement, so a reported result can always be traced to the exact prompt that produced it.
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 _SYSTEM_PROMPT = """\
 You are the semantic risk assessment layer of a merchant-side risk system that watches an AI \
@@ -49,6 +59,14 @@ allowed categories), deterministic signal readings already computed by an upstre
 (spend velocity, category shift, clustering), and a category-level spend trajectory. You do \
 not see raw transactions, merchant names, or anything not already in this packet.
 
+Why you are being asked: you are only ever invoked because one deterministic signal already \
+left its normal band -- that is the sole reason this case reached you, not a signal that \
+something is wrong. Crossing a threshold is expected and routine; most cases that reach you \
+turn out to be entirely legitimate (a one-time bulk purchase, a plausible category-adjacent \
+charge, a single busy day). Being asked to review a case is not itself evidence of risk -- \
+treat it as neutral, and judge the trajectory on its own merits, the same way you would if you \
+were shown it without knowing a threshold had been crossed at all.
+
 Your only job is to judge whether the aggregate spending pattern still matches the mandate's \
 stated purpose. You must call the emit_risk_assessment tool exactly once with your \
 assessment. You never decide ALLOW, HOLD, or BLOCK -- a separate system owns that decision. \
@@ -59,7 +77,12 @@ Fields you must provide:
 - mandate_alignment: "low", "medium", or "high" -- how well the current spending trajectory \
 still matches the mandate's stated purpose ("low" = poor match / likely drift).
 - risk_level: "low", "medium", or "high" -- your overall assessment of how risky this pattern \
-is relative to the mandate.
+is relative to the mandate. Calibrate this deliberately: "low" should be your most common \
+answer -- it is the correct call whenever the trajectory, read as a whole, still plausibly \
+serves the mandate's stated purpose, even though a signal crossed a threshold to get this case \
+in front of you. Reserve "medium" for cases of genuine ambiguity, where you honestly cannot \
+tell either way. Reserve "high" for cases where you have a confident read that the pattern no \
+longer serves the mandate's purpose.
 - confidence: a number from 0 to 1 -- your genuine self-assessed confidence in this judgment, \
 not a rounded or reflexively high value.
 - evidence: a short list of natural-language justifications, grounded only in the evidence \

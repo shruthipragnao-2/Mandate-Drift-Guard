@@ -1,0 +1,42 @@
+[
+  {
+    "case_id": "6d230e03",
+    "status": "success",
+    "prompt_version": "v2",
+    "risk_level": "medium",
+    "confidence": 0.6,
+    "mandate_alignment": "medium"
+  },
+  {
+    "case_id": "2f819388",
+    "status": "success",
+    "prompt_version": "v2",
+    "risk_level": "medium",
+    "confidence": 0.6,
+    "mandate_alignment": "medium"
+  },
+  {
+    "case_id": "c4d47194",
+    "status": "success",
+    "prompt_version": "v2",
+    "risk_level": "low",
+    "confidence": 0.72,
+    "mandate_alignment": "medium"
+  },
+  {
+    "case_id": "6325b641",
+    "status": "success",
+    "prompt_version": "v2",
+    "risk_level": "medium",
+    "confidence": 0.6,
+    "mandate_alignment": "medium"
+  },
+  {
+    "case_id": "b8bfb617",
+    "status": "success",
+    "prompt_version": "v2",
+    "risk_level": "medium",
+    "confidence": 0.65,
+    "mandate_alignment": "medium"
+  }
+]

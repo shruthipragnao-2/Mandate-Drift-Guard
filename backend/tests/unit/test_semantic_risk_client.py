@@ -80,7 +80,7 @@ def test_success_path_populates_every_field(evidence_packet_factory):
     assert outcome.llm_output.evidence == ["spend has shifted away from allowed categories"]
     assert outcome.raw_response is not None
     assert outcome.model_version == "claude-sonnet-5"
-    assert outcome.prompt_version == "v1"
+    assert outcome.prompt_version == "v2"
     assert outcome.latency_ms is not None and outcome.latency_ms >= 0
     assert outcome.error_detail is None
     assert client.messages.create.call_count == 1
