@@ -3,6 +3,12 @@
 Checkpoint C5 / milestone M0 built app startup, config loading, logging, and the health
 endpoint. Checkpoint C12 adds the ingestion and HOLD-resolution routers (routing/serialization/
 auth only -- both wrap the already-built, unmodified `domain.pipeline` orchestrator).
+Checkpoint C14 adds CORS: the frontend (Vite dev server, a different origin even on
+localhost -- port alone makes it cross-origin) would otherwise have every request blocked by
+the browser before auth is ever checked, per M7's exit bar of an Ops analyst reaching the
+backend from a real browser. `allow_origins` is limited to the two Vite dev-server origin
+spellings, not a wildcard -- Decision 17's bearer token still gates every route; this only
+lets the browser make the request at all.
 """
 
 import logging
@@ -11,6 +17,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.cases import router as cases_router
@@ -33,6 +40,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Mandate Drift Guard", version="0.0.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(health_router)
 app.include_router(transactions_router)
 app.include_router(cases_router)

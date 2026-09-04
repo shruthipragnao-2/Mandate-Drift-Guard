@@ -1,0 +1,373 @@
+/* Clean, functional risk-ops styling -- no animation, no decorative flourishes. Visual
+   hierarchy is carried by spacing, weight, and the 4-step timeline's numbering, since the
+   demo's whole point is that the timeline reads at a glance. */
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #dfe3e8;
+  --text: #1a1f27;
+  --muted: #6b7280;
+  --accent: #2952cc;
+  --green-bg: #e6f4ea;
+  --green-text: #1e7d34;
+  --amber-bg: #fdf1dc;
+  --amber-text: #96650a;
+  --red-bg: #fbe7e7;
+  --red-text: #b3261e;
+  --neutral-bg: #eef0f3;
+  --neutral-text: #4b5563;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.app-nav nav {
+  display: flex;
+  gap: 8px;
+}
+
+.app-nav nav button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.app-nav nav button.nav-active {
+  background: var(--neutral-bg);
+  color: var(--text);
+  font-weight: 600;
+}
+
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+button {
+  font-family: inherit;
+}
+
+.button-secondary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.button-confirm,
+.button-deny {
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+}
+
+.button-confirm {
+  background: var(--green-text);
+}
+
+.button-deny {
+  background: var(--red-text);
+}
+
+.button-confirm:disabled,
+.button-deny:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 14px 0;
+  font-size: 0.9rem;
+}
+
+.banner-error {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+
+.banner-warning {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+
+.banner-success {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.empty-state {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 32px;
+  text-align: center;
+}
+
+.empty-state-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+}
+
+.case-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.case-table th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.case-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+}
+
+.case-row {
+  cursor: pointer;
+}
+
+.case-row:hover {
+  background: var(--neutral-bg);
+}
+
+.case-row-action {
+  color: var(--accent);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mandate-context {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.mandate-context-value {
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.timeline-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.timeline-step h2 {
+  font-size: 1rem;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-tag {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  row-gap: 6px;
+  font-size: 0.92rem;
+}
+
+.badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.badge-green {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.badge-amber {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+
+.badge-red {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+
+.badge-neutral {
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
+}
+
+.evidence-list {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+}
+
+.evidence-list li {
+  margin-bottom: 4px;
+}
+
+.rule-applied {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  background: var(--neutral-bg);
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.resolve-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resolve-panel h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.resolve-panel label,
+.simulate-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.resolve-panel input,
+.resolve-panel textarea,
+.simulate-form input,
+.simulate-form select {
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.resolve-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.simulate-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+  margin-bottom: 8px;
+}

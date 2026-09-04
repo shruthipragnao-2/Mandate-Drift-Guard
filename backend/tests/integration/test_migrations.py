@@ -10,7 +10,7 @@ import pytest
 import sqlalchemy as sa
 from alembic import command
 
-HEAD_REVISION = "8e58ccd4981c"
+HEAD_REVISION = "8a80952b350f"
 
 DOMAIN_TABLES = {
     "mandates",

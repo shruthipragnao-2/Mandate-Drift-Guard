@@ -220,7 +220,10 @@ class Case(Base):
     addition: HOLD applies to the specific triggering transaction, not just the mandate."""
 
     __tablename__ = "cases"
-    __table_args__ = (UniqueConstraint("transaction_id", name="uq_cases_transaction_id"),)
+    __table_args__ = (
+        UniqueConstraint("transaction_id", name="uq_cases_transaction_id"),
+        Index("ix_cases_state", "state"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     mandate_id: Mapped[uuid.UUID] = mapped_column(
