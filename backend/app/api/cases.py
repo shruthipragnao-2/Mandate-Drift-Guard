@@ -137,7 +137,18 @@ class CaseDetailResponse(BaseModel):
     # (domain.pipeline._persist_crossed_case writes it unconditionally once the threshold
     # crosses, before the LLM is ever called).
     semantic_assessment: SemanticAssessmentDetail | None
-    gate_decision: GateDecisionDetail
+    # Both of the following became nullable with Decision 20's fail-closed exception backstop
+    # (docs/IMPLEMENTATION-BASELINE.md §24). A case opened because the pipeline threw has
+    # neither: the exception may have landed before the evidence packet was ever built, and the
+    # gate was never reached at all, so by Decision 20 no `gate_decisions` row is written. The
+    # comment above about evidence_packet being "always present for an opened case" held
+    # exactly until that path existed. `fail_closed_reason` below is what a case detail shows
+    # instead, so the UI has something true to render rather than an empty step.
+    evidence_packet: EvidencePacketDetail | None
+    gate_decision: GateDecisionDetail | None
+    # The exception type recorded by the backstop, read back from this case's audit event.
+    # None for every ordinary case; set only for a Decision 20 fail-closed hold.
+    fail_closed_reason: str | None = None
 
 
 @router.get(
@@ -154,18 +165,29 @@ def get_case_detail(case_id: uuid.UUID, db: Session = Depends(get_db)) -> CaseDe
     transaction = case.transaction
     gate_decision = case.gate_decision
 
-    # Always present for an opened case -- domain.pipeline._persist_crossed_case writes this
-    # row unconditionally once the threshold crosses, before the LLM is ever called, so a
-    # case can only exist if its evidence_packet does too.
+    # `.first()`, not `.one()`. Until Decision 20 this row was guaranteed for any opened case
+    # (`_persist_crossed_case` writes it unconditionally once the threshold crosses, before the
+    # LLM is called), and `.one()` asserted that. The fail-closed exception backstop broke the
+    # guarantee: a case opened because the pipeline threw may have no evidence packet, and
+    # `.one()` would have raised `NoResultFound` -- turning the Ops analyst's attempt to READ a
+    # fail-closed case into a second 500, at exactly the moment they most need to see it.
     evidence_packet = (
         db.query(models.EvidencePacket)
         .filter(models.EvidencePacket.transaction_id == transaction.id)
-        .one()
+        .first()
     )
     semantic_assessment = (
         db.query(models.SemanticAssessment)
         .join(models.EvidencePacket)
         .filter(models.EvidencePacket.transaction_id == transaction.id)
+        .first()
+    )
+    fail_closed_event = (
+        db.query(models.AuditEvent)
+        .filter(
+            models.AuditEvent.case_id == case.id,
+            models.AuditEvent.event_type == "pipeline_exception_fail_closed_hold",
+        )
         .first()
     )
 
@@ -193,7 +215,9 @@ def get_case_detail(case_id: uuid.UUID, db: Session = Depends(get_db)) -> CaseDe
         evidence_packet=EvidencePacketDetail(
             signals=evidence_packet.signals,
             trajectory=evidence_packet.trajectory,
-        ),
+        )
+        if evidence_packet is not None
+        else None,
         semantic_assessment=SemanticAssessmentDetail(
             risk_level=semantic_assessment.risk_level,
             mandate_alignment=semantic_assessment.mandate_alignment,
@@ -206,6 +230,11 @@ def get_case_detail(case_id: uuid.UUID, db: Session = Depends(get_db)) -> CaseDe
             decision=gate_decision.decision,
             rule_version=gate_decision.rule_version,
             rule_applied=gate_decision.rule_applied,
+        )
+        if gate_decision is not None
+        else None,
+        fail_closed_reason=(
+            fail_closed_event.payload.get("exception_type") if fail_closed_event else None
         ),
     )
 

@@ -217,7 +217,16 @@ CASE_STATES = ("hold", "resolved_allow", "resolved_block")
 class Case(Base):
     """Read-optimized current-state view. Only rows that reached HOLD or later get a case —
     a nominal ALLOW transaction never has one. `transaction_id` is Decision 2's required
-    addition: HOLD applies to the specific triggering transaction, not just the mandate."""
+    addition: HOLD applies to the specific triggering transaction, not just the mandate.
+
+    `gate_decision_id` is NULLABLE as of Decision 20 (migration c4f1b7e2d9a3) — and ONLY for
+    the one path that decision creates: the fail-closed backstop in
+    `domain.pipeline.run_pipeline`, which opens a case when the pipeline throws an unforeseen
+    exception. The gate is never reached on that path, so no `gate_decisions` row exists to
+    point at, and writing one would record a decision that was never made (Decision 5 applies
+    the same reasoning one layer up, to `semantic_assessments`). Every other path still writes
+    a gate decision first and links it here; that is now an application-level invariant rather
+    than a schema-level one."""
 
     __tablename__ = "cases"
     __table_args__ = (
@@ -232,8 +241,8 @@ class Case(Base):
     transaction_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("transactions.id", ondelete="RESTRICT"), nullable=False
     )
-    gate_decision_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("gate_decisions.id", ondelete="RESTRICT"), nullable=False, unique=True
+    gate_decision_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("gate_decisions.id", ondelete="RESTRICT"), nullable=True, unique=True
     )
     state: Mapped[str] = mapped_column(Enum(*CASE_STATES, name="case_state"), nullable=False)
     opened_at: Mapped[datetime] = mapped_column(
@@ -245,7 +254,7 @@ class Case(Base):
 
     mandate: Mapped["Mandate"] = relationship(back_populates="cases")
     transaction: Mapped["Transaction"] = relationship(back_populates="case")
-    gate_decision: Mapped["GateDecision"] = relationship(back_populates="case")
+    gate_decision: Mapped["GateDecision | None"] = relationship(back_populates="case")
     audit_events: Mapped[list["AuditEvent"]] = relationship(back_populates="case")
 
 

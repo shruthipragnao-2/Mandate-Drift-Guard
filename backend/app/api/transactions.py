@@ -167,10 +167,31 @@ def _same_payload(existing: models.Transaction, request: TransactionCreateReques
     )
 
 
+def _decision_for(state: str) -> Literal["allow", "hold"]:
+    """The reported `decision` when no `gate_decisions` row exists for this transaction.
+
+    Decision 20 made that combination reachable in a new way. Before it, "no gate decision"
+    meant exactly one thing -- the deterministic threshold was never crossed, so the gate was
+    never invoked and the transaction was allowed nominally -- and defaulting to `"allow"` was
+    right. The fail-closed exception backstop now also opens a case with no gate decision, and
+    that transaction is `held`. Defaulting to `"allow"` there would have reported
+    `decision="allow"` alongside `state="held"` in the same response: a held transaction
+    telling its caller it was allowed. Not a fail-open in the pipeline -- the money is still
+    held and the case is still open -- but a fail-open in the REPORTING, which is how an
+    integrator would learn what happened.
+
+    So the state decides, and the state is unambiguous: only a transaction that is actually
+    `allowed` reports `"allow"`. `held` and `blocked` both report `"hold"` (`blocked` is
+    reachable only by resolving or timing out a hold, per baseline §7, so `"hold"` is its
+    honest gate-level answer).
+    """
+    return "allow" if state == "allowed" else "hold"
+
+
 def _response_for_existing(db: Session, txn: models.Transaction) -> TransactionCreateResponse:
     case = db.query(models.Case).filter_by(transaction_id=txn.id).first()
     gate_decision_row = db.query(models.GateDecision).filter_by(transaction_id=txn.id).first()
-    decision = gate_decision_row.decision if gate_decision_row else "allow"
+    decision = gate_decision_row.decision if gate_decision_row else _decision_for(txn.state)
     return TransactionCreateResponse(
         transaction_id=txn.id,
         state=txn.state,
@@ -255,7 +276,11 @@ def create_transaction(
     return TransactionCreateResponse(
         transaction_id=result.transaction_id,
         state=result.state,
-        decision=result.gate_decision or "allow",
+        decision=result.gate_decision or _decision_for(result.state),
         case_id=result.case_id,
+        # Still None when the gate never ran -- including on Decision 20's fail-closed backstop
+        # path, where the honest answer is "no gate decision exists", not a fabricated one.
+        # `decision` above carries the effective outcome; this field carries what the gate
+        # itself actually said, and the two are deliberately not the same field.
         gate_decision=result.gate_decision,
     )

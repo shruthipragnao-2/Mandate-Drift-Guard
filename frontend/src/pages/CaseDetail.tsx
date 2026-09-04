@@ -104,26 +104,33 @@ export function CaseDetail({
 
             <li className="timeline-step">
               <h2>2. Deterministic Signals</h2>
-              <div className="badge-row">
-                {detail.evidence_packet.signals.spend_velocity && (
-                  <Badge
-                    label={`velocity: ${detail.evidence_packet.signals.spend_velocity}`}
-                    tone={toneForBand(detail.evidence_packet.signals.spend_velocity)}
-                  />
-                )}
-                {detail.evidence_packet.signals.category_shift && (
-                  <Badge
-                    label={`category shift: ${detail.evidence_packet.signals.category_shift}`}
-                    tone={toneForCategoryShift(detail.evidence_packet.signals.category_shift)}
-                  />
-                )}
-                {detail.evidence_packet.signals.clustering && (
-                  <Badge
-                    label={`clustering: ${detail.evidence_packet.signals.clustering}`}
-                    tone={toneForBand(detail.evidence_packet.signals.clustering)}
-                  />
-                )}
-              </div>
+              {detail.evidence_packet ? (
+                <div className="badge-row">
+                  {detail.evidence_packet.signals.spend_velocity && (
+                    <Badge
+                      label={`velocity: ${detail.evidence_packet.signals.spend_velocity}`}
+                      tone={toneForBand(detail.evidence_packet.signals.spend_velocity)}
+                    />
+                  )}
+                  {detail.evidence_packet.signals.category_shift && (
+                    <Badge
+                      label={`category shift: ${detail.evidence_packet.signals.category_shift}`}
+                      tone={toneForCategoryShift(detail.evidence_packet.signals.category_shift)}
+                    />
+                  )}
+                  {detail.evidence_packet.signals.clustering && (
+                    <Badge
+                      label={`clustering: ${detail.evidence_packet.signals.clustering}`}
+                      tone={toneForBand(detail.evidence_packet.signals.clustering)}
+                    />
+                  )}
+                </div>
+              ) : (
+                <p className="muted">
+                  No signals recorded -- the pipeline raised an unexpected error before this
+                  stage completed, and the transaction was held by the fail-closed backstop.
+                </p>
+              )}
             </li>
 
             <li className="timeline-step">
@@ -160,11 +167,28 @@ export function CaseDetail({
 
             <li className="timeline-step">
               <h2>4. Gate Decision</h2>
-              <div className="badge-row">
-                <Badge label={detail.gate_decision.decision} tone={detail.gate_decision.decision === "hold" ? "amber" : "green"} />
-                <span className="muted">rule version: {detail.gate_decision.rule_version}</span>
-              </div>
-              <p className="rule-applied">{detail.gate_decision.rule_applied}</p>
+              {detail.gate_decision ? (
+                <>
+                  <div className="badge-row">
+                    <Badge label={detail.gate_decision.decision} tone={detail.gate_decision.decision === "hold" ? "amber" : "green"} />
+                    <span className="muted">rule version: {detail.gate_decision.rule_version}</span>
+                  </div>
+                  <p className="rule-applied">{detail.gate_decision.rule_applied}</p>
+                </>
+              ) : (
+                <>
+                  <div className="badge-row">
+                    <Badge label="hold" tone="amber" />
+                    <span className="muted">fail-closed backstop</span>
+                  </div>
+                  <p className="rule-applied">
+                    The gate was never reached: the pipeline raised
+                    {detail.fail_closed_reason ? ` ${detail.fail_closed_reason}` : " an unexpected error"}
+                    , and this transaction was held rather than allowed. No gate decision is
+                    recorded because none was made.
+                  </p>
+                </>
+              )}
             </li>
           </ol>
 

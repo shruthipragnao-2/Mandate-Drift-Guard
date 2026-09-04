@@ -858,3 +858,107 @@ cross-reference this decision rather than conclude the item was silently missed.
 does not touch any other row of §S, and does not itself declare every scoring-relevant item in
 §S resolved — it resolves the one row that was flagged during C13 prep as blocking the metric
 set actually built.
+
+---
+
+## 24. Decision 20 (red-team Category 1 / RT-C1-008, human sign-off 2026-09-04)
+
+Resolves the one `CRITICAL` finding left open by the red-team pass (RED_TEAM_LOG.md,
+RT-C1-008), and implements the fourth clause of §6's fail-closed invariant, which had been
+locked since 2026-08-30 and implemented nowhere.
+
+§6 locks, as hard and non-tunable: *any of {LLM timeout, malformed/non-schema output, low
+confidence, **unhandled pipeline exception**} routes to HOLD, never to silent ALLOW.* The
+first three live in `policy_gate.decide()`. The fourth had no implementation at all — there
+was no `try`/`except` anywhere in `run_pipeline` or `api/transactions.py`, so an unforeseen
+exception propagated to FastAPI as an HTTP 500 with **nothing persisted**: no transaction row,
+no case, no audit event. Stated fairly, and this is why it was not a fail-open: a 500 grants no
+authorization and moves no money. But it left a locked invariant unimplemented and the audit
+trail silently incomplete every time it fired, which also breaches eval-design §15's
+100%-audit-completeness target. It was the systemic root cause behind RT-C1-002 through 006 —
+each of those was one known input reaching this same unguarded hole.
+
+**`[LOCKED — Decision 20, human sign-off 2026-09-04]` `domain.pipeline.run_pipeline`'s full
+body is wrapped in an exception boundary. On catching an otherwise-unhandled exception it
+rolls back any partial writes from the failed attempt, then persists a `held` transaction, an
+open `hold` case, and one audit event recording the exception's type and message only.** No
+`semantic_assessments` row (nothing valid was produced) and no `gate_decisions` row (the gate
+was never reached) — mirroring Decision 5's "no row when nothing validated" exactly, one layer
+earlier. The rollback is ordered first and is not optional: `_persist_crossed_case` flushes a
+transaction, an evidence packet and possibly a semantic assessment before it commits, and a
+half-persisted evaluation coexisting with a fail-closed hold would be a worse audit record than
+either alone.
+
+This is a **backstop, not a replacement** for the four paths above it. Those paths do not raise
+— `assess()` returns a structured outcome for timeout/malformed/transport_error and
+`decide()` returns `hold` for them and for unusable confidence — so they never reach the
+handler, and their richer records (evidence packet, gate decision, `rule_applied`) are
+unchanged. `tests/integration/test_pipeline_fail_closed_backstop.py::test_structured_llm_failure_still_routes_through_the_gate`
+is the pin that fails if the backstop ever starts swallowing them.
+
+**Consequences that follow necessarily from this decision, recorded because each is a real
+change and none should be discovered later by surprise:**
+
+1. **`cases.gate_decision_id` is now NULLABLE** (migration `c4f1b7e2d9a3`). "A case with no
+   gate decision" was literally unrepresentable — `6dd89a9648d3` created that column
+   `NOT NULL` — so this decision could not be implemented as written without relaxing it.
+   Stated plainly as the weakening it is: the schema-level guarantee that every case has a gate
+   decision is gone, for **all** cases, to represent one new path. What replaces it is narrower
+   and enforced in application code plus tests, not by Postgres: a case has a gate decision
+   unless it was opened by this backstop, in which case its audit event carries the reason. The
+   alternative — writing a `gate_decisions` row saying `hold` — was rejected: it would put a
+   decision in the audit log that no gate ever made, and this system's entire evidentiary
+   premise is that it does not do that. The migration's `downgrade()` deliberately refuses to
+   re-tighten the column while any such case exists rather than deleting or inventing rows.
+2. **`POST /transactions` no longer derives `decision` from `gate_decision or "allow"`.** That
+   default was correct while "no gate decision" could only mean "threshold never crossed,
+   allowed nominally". This decision makes it also mean "the gate never ran and the money is
+   held" — so the endpoint would have returned `state="held"` with `decision="allow"` in the
+   same response. Not a fail-open in the pipeline, but a fail-open in the **reporting**, which
+   is how an integrator learns what happened. `decision` is now derived from the transaction's
+   state, on both the fresh and the idempotent-replay paths.
+3. **`GET /cases/{id}` returns `evidence_packet` and `gate_decision` as nullable**, and no
+   longer asserts the evidence packet's existence with `.one()`. Reading a backstop case would
+   otherwise have raised `NoResultFound` — a second 500, at the exact moment an analyst is
+   trying to look at the case the first failure created. The frontend renders an explicit
+   fail-closed explanation in timeline steps 2 and 4 instead of an empty step, and a new
+   `fail_closed_reason` field carries the exception type through to the UI.
+4. **`IntegrityError` is deliberately re-raised, not caught.** `api/transactions.py` catches
+   it to implement RT-C1-009's fix (the loser of an idempotency race returns the winner's
+   replay rather than a 500), and swallowing it here would both kill that handler and be
+   futile anyway — the backstop's own recovery insert carries the same `idempotency_key` and
+   would violate the identical unique constraint. `BaseException` (`KeyboardInterrupt`,
+   `SystemExit`) is likewise not caught: a process being shut down should not be opening new
+   hold cases on its way out.
+5. **eval-design §16's pipeline-error-rate metric now needs a different input.**
+   `eval/run.py` and `eval/run_locked_test.py` both identify a pipeline error by catching the
+   exception around `run_pipeline` — and after this decision that exception no longer escapes,
+   so a naive reading of that metric would report zero errors where errors occurred.
+   `PipelineResult.fail_closed_reason` (the exception type name, `None` on every ordinary path)
+   is what a harness must read instead. **Neither eval script is modified by this decision**:
+   `eval/run_locked_test.py` produced the locked C13 test-set numbers and is not to be edited,
+   and the C13 run itself recorded 0 pipeline errors, so nothing already reported is affected.
+   This is recorded as a known input change for any future harness run, not as a silent gap.
+
+**Limits of the audit record, stated exactly rather than implied.** The event stores the
+exception type plus a message from which every value supplied by *this request* (`merchant`,
+`category`, `amount`, `occurred_at`, `idempotency_key`) has been substituted out, truncated to
+500 characters, with no traceback. Active redaction is necessary rather than paranoid: an
+exception's message very often *is* its arguments, and library exceptions routinely quote the
+input they choked on — RT-C1-004's `InvalidTextRepresentation` did precisely that, and
+RT-C1-007 was the same lesson from the other side, where the validation handler crashed because
+it echoed attacker-controlled `input` back into a response. What is **not** claimed: that the
+remaining text is free of all sensitive data. An arbitrary exception from an arbitrary library
+can say anything, and a message this system has never seen cannot be pattern-matched in
+advance. The guarantee is bounded and testable, not general sanitisation.
+
+**Also not claimed:** that the backstop can survive a database that is refusing writes. If the
+recovery write itself fails, the exception propagates and the request 500s — the honest
+outcome, since at that point there is no way to record anything at all. It is not retried; a
+backstop for the backstop would only move the same problem one frame outward.
+
+**Explicitly not touched by Decision 20:** velocity's period-renewal gap (§18, still `[OPEN]`,
+and RT-C1-001's fix deliberately did not resolve it either), RT-C1-010's missing length cap on
+`merchant`/`category` (COSMETIC, deferred to the red-team Category 4 pass), and every row of
+docs/IMPLEMENTATION-PLAN.md §S not already resolved by Decisions 1–19. Red-team Categories 2,
+3 and 4 remain unrun; nothing in this decision is evidence about them.

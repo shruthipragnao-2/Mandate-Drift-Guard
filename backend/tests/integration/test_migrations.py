@@ -10,7 +10,10 @@ import pytest
 import sqlalchemy as sa
 from alembic import command
 
-HEAD_REVISION = "8a80952b350f"
+# Updated with every new revision -- this pin is the guard that a migration was actually
+# written and applied, so it is expected to change, deliberately, alongside the chain.
+# c4f1b7e2d9a3 (Decision 20) makes cases.gate_decision_id nullable.
+HEAD_REVISION = "c4f1b7e2d9a3"
 
 DOMAIN_TABLES = {
     "mandates",

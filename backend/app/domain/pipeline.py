@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal, Sequence
 
 import anthropic
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import (
@@ -138,6 +139,12 @@ class PipelineResult:
     gate_decision: Literal["allow", "hold"] | None
     case_id: uuid.UUID | None
     llm_status: str | None
+    # Decision 20: the exception type name when this result came from the fail-closed backstop
+    # rather than from the gate. None on every ordinary path. Callers that need to distinguish
+    # "held because the gate said so" from "held because the pipeline threw" read this --
+    # notably eval-design §16's pipeline-error-rate metric, which previously identified that
+    # second case by catching the exception itself (it no longer escapes).
+    fail_closed_reason: str | None = None
 
 
 def run_pipeline(
@@ -152,10 +159,77 @@ def run_pipeline(
     gate_config: GatePolicyConfig = GATE_POLICY_CONFIG,
     app_settings: Settings = settings,
 ) -> PipelineResult:
+    """Decision 20's fail-closed exception backstop (docs/IMPLEMENTATION-BASELINE.md §24),
+    resolving red-team finding RT-C1-008. Baseline §6 locks a hard, non-tunable invariant:
+    any of {LLM timeout, malformed/non-schema output, low confidence, **unhandled pipeline
+    exception**} routes to HOLD, never to silent ALLOW. The first three were implemented in
+    `policy_gate.decide()` from the start; the fourth was implemented NOWHERE -- an unforeseen
+    throw propagated to FastAPI as a 500 with nothing persisted at all: no transaction row, no
+    case, no audit event. Not a fail-OPEN (no authorization is granted and no money moves), but
+    a locked invariant left unimplemented, and a silently incomplete audit trail every time it
+    fired -- which also breaches eval-design §15's 100%-audit-completeness target.
+
+    This wrapper is a BACKSTOP, not a replacement for the four paths above. Those paths do not
+    raise: `semantic_risk_client.assess()` returns a structured outcome for
+    timeout/malformed/transport_error, and `policy_gate.decide()` returns `hold` for them and
+    for unusable confidence. They never reach the `except` below, and their richer records
+    (evidence packet, gate decision, rule_applied) are unchanged. What lands here is only what
+    nothing else anticipated.
+
+    Two things deliberately still escape:
+
+    `IntegrityError` is re-raised untouched. `api/transactions.py` catches it to implement
+    red-team fix RT-C1-009 (the lost idempotency race returns the winner's replay, not a 500),
+    and swallowing it here would both break that and be unfixable anyway -- the backstop's own
+    recovery insert carries the same `idempotency_key` and would violate the very same unique
+    constraint. Its existing handler is correct and produces the right answer; this one would
+    not.
+
+    `BaseException` (KeyboardInterrupt, SystemExit) is not caught, by using `except Exception`:
+    a process being shut down should not be writing new hold cases on its way out.
+    """
+    # Read before the guard: `audit_events.mandate_id` is NOT NULL, so the backstop cannot
+    # write anything at all without this value. If reading it is itself what fails, there is no
+    # honest fail-closed record to write and the exception propagates -- an acknowledged,
+    # documented limit of this backstop rather than a silently swallowed case.
+    mandate_id = mandate.id
+    try:
+        return _run_pipeline_body(
+            session,
+            mandate,
+            historical_transactions,
+            incoming,
+            llm_client=llm_client,
+            evidence_config=evidence_config,
+            llm_config=llm_config,
+            gate_config=gate_config,
+            app_settings=app_settings,
+        )
+    except IntegrityError:
+        raise
+    except Exception as exc:  # noqa: BLE001 -- deliberately total; see docstring
+        return _persist_fail_closed_hold(session, mandate_id, incoming, exc)
+
+
+def _run_pipeline_body(
+    session: Session,
+    mandate: models.Mandate,
+    historical_transactions: Sequence[TransactionLike],
+    incoming: IncomingTransaction,
+    *,
+    llm_client: anthropic.Anthropic | None = None,
+    evidence_config: EvidenceEngineThresholds = EVIDENCE_ENGINE_THRESHOLDS,
+    llm_config: SemanticRiskClientConfig = SEMANTIC_RISK_CLIENT_CONFIG,
+    gate_config: GatePolicyConfig = GATE_POLICY_CONFIG,
+    app_settings: Settings = settings,
+) -> PipelineResult:
     """The one place that calls all three layers in sequence (Plan §D's own requirement) --
-    API handlers (C12) and the eval harness (`eval/run.py`) both call this, never the
-    individual layers directly, so live traffic and evaluation share exactly one orchestration
-    path. `mandate` and `historical_transactions` are assumed already persisted; this function
+    API handlers (C12) and the eval harness (`eval/run.py`) both reach this through
+    `run_pipeline` above, never the individual layers directly, so live traffic and evaluation
+    share exactly one orchestration path. Split out of `run_pipeline` by Decision 20 purely so
+    that function's body is a single guarded call rather than a long block wrapped in a `try`;
+    the logic below is unchanged, and nothing calls this directly except its guard.
+    `mandate` and `historical_transactions` are assumed already persisted; this function
     persists exactly one new `transactions` row (plus whatever else the crossed path requires)
     and returns.
 
@@ -200,6 +274,151 @@ def run_pipeline(
     return _persist_crossed_case(
         session, mandate, incoming, threshold_check, velocity_result, category_shift_result,
         clustering_result, evidence_packet, llm_outcome, gate_result,
+    )
+
+
+# Decision 20: bounds on what the fail-closed audit event records about the exception.
+_MAX_AUDITED_EXCEPTION_MESSAGE_CHARS = 500
+# Values shorter than this are not substring-redacted: a 1- or 2-character merchant or category
+# ("x", "ab") occurs incidentally all over ordinary English exception text, and replacing every
+# occurrence would shred the message into unreadable noise while protecting nothing meaningful.
+# Documented as the deliberate trade-off it is, not an oversight.
+_MIN_REDACTABLE_VALUE_CHARS = 3
+
+
+def _redacted_exception_message(exc: BaseException, incoming: IncomingTransaction) -> str:
+    """Decision 20: the audit event records the exception's type and message ONLY -- never the
+    traceback, and never a value from the request echoed back verbatim.
+
+    Why this needs active redaction rather than just "don't log the traceback": an exception's
+    message very often IS its arguments, and library exceptions routinely quote the offending
+    input (`psycopg2.errors.InvalidTextRepresentation` includes the literal it choked on). So
+    every request-supplied field is substituted out of the message by value before it is
+    stored. Red-team finding RT-C1-007 is the same lesson from the other direction: the
+    validation-error handler used to crash precisely because it echoed attacker-controlled
+    `input` back into a response.
+
+    The guarantee is deliberately scoped and worth stating exactly: no value from THIS request
+    (`merchant`, `category`, `amount`, `occurred_at`, `idempotency_key`) survives verbatim.
+    It is not a claim that the remaining text is free of all sensitive data -- an arbitrary
+    exception from an arbitrary library can say anything, and a message this system has never
+    seen cannot be pattern-matched in advance. It is a bounded, testable property, not a
+    promise of general sanitisation.
+    """
+    message = str(exc)
+
+    renderings: list[tuple[str, str]] = [
+        ("merchant", incoming.merchant),
+        ("category", incoming.category),
+        ("idempotency_key", incoming.idempotency_key),
+        ("amount", str(incoming.amount)),
+        ("amount", repr(incoming.amount)),
+        ("occurred_at", incoming.occurred_at.isoformat()),
+        ("occurred_at", str(incoming.occurred_at)),
+    ]
+
+    seen: set[str] = set()
+    for field_name, rendered in renderings:
+        if not isinstance(rendered, str) or rendered in seen:
+            continue
+        seen.add(rendered)
+        if len(rendered) >= _MIN_REDACTABLE_VALUE_CHARS and rendered in message:
+            message = message.replace(rendered, f"[redacted:{field_name}]")
+
+    if len(message) > _MAX_AUDITED_EXCEPTION_MESSAGE_CHARS:
+        message = message[:_MAX_AUDITED_EXCEPTION_MESSAGE_CHARS] + "... [truncated]"
+    return message
+
+
+def _persist_fail_closed_hold(
+    session: Session,
+    mandate_id: uuid.UUID,
+    incoming: IncomingTransaction,
+    exc: BaseException,
+) -> PipelineResult:
+    """Decision 20's recovery state: the rows that must exist after the pipeline throws.
+
+    Writes a `held` transaction and an open `hold` case -- so the transaction does not
+    complete (Decision 2: held-ness is a property of the transaction itself) and an Ops analyst
+    sees it in the queue exactly like any other hold -- plus one audit event carrying the
+    reason.
+
+    NOT written, deliberately: no `evidence_packets` row (the packet may never have been
+    built), no `semantic_assessments` row (nothing valid was produced), no `gate_decisions` row
+    (the gate was never reached). That mirrors Decision 5's rule -- no row when nothing
+    validated -- applied one layer earlier. Recording a gate decision here would put a decision
+    in the audit log that no gate ever made, which is precisely the kind of fabrication this
+    system's whole evidentiary premise rests on refusing. `cases.gate_decision_id` was made
+    nullable by migration c4f1b7e2d9a3 to let this be representable at all.
+
+    The rollback comes first and is not optional: the failed attempt may have flushed rows
+    already (`_persist_crossed_case` flushes a transaction, an evidence packet, and possibly a
+    semantic assessment before it commits), and a half-persisted evaluation coexisting with a
+    fail-closed hold would be a worse audit record than either alone.
+
+    If this recovery write ITSELF fails, the exception propagates and the request 500s. That is
+    the honest outcome: at that point the database is refusing writes, and there is no way to
+    record anything. It is not caught and retried -- a backstop for the backstop would just
+    move the same problem one frame further out.
+    """
+    session.rollback()
+
+    txn_row = models.Transaction(
+        mandate_id=mandate_id,
+        merchant=incoming.merchant,
+        category=incoming.category,
+        amount=incoming.amount,
+        occurred_at=incoming.occurred_at,
+        idempotency_key=incoming.idempotency_key,
+        state="held",
+    )
+    session.add(txn_row)
+    session.flush()
+
+    case_row = models.Case(
+        mandate_id=mandate_id,
+        transaction_id=txn_row.id,
+        gate_decision_id=None,
+        state="hold",
+    )
+    session.add(case_row)
+    session.flush()
+
+    session.add(
+        models.AuditEvent(
+            case_id=case_row.id,
+            mandate_id=mandate_id,
+            transaction_id=txn_row.id,
+            event_type="pipeline_exception_fail_closed_hold",
+            payload={
+                "reason": "unhandled_pipeline_exception",
+                "exception_type": type(exc).__name__,
+                "exception_message": _redacted_exception_message(exc, incoming),
+                "invariant": "baseline §6: unhandled pipeline exception routes to HOLD",
+                "gate_reached": False,
+            },
+        )
+    )
+    session.commit()
+
+    return PipelineResult(
+        transaction_id=txn_row.id,
+        state="held",
+        # Read these two as "no threshold crossing was RECORDED", not as "the signals were
+        # benign". Whether the threshold had been crossed before the throw is genuinely unknown
+        # here -- the exception may have landed before the signals were computed or after the
+        # gate returned. `fail_closed_reason` is the field that says which kind of result this
+        # is; these two carry no evidence on this path and must not be read as if they did.
+        threshold_crossed=False,
+        triggering_signals=(),
+        # None, not "hold": the gate genuinely never ran. The HOLD came from this backstop, and
+        # `fail_closed_reason` below is where that fact is reported. Callers deriving a
+        # user-facing decision must read `state`, never assume `gate_decision is None` means
+        # "allowed" -- see api/transactions.py's `_decision_for`.
+        gate_decision=None,
+        case_id=case_row.id,
+        llm_status=None,
+        fail_closed_reason=type(exc).__name__,
     )
 
 

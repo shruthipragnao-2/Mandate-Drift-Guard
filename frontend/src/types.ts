@@ -73,9 +73,14 @@ export interface CaseDetailResponse {
   resolution_reason: string | null;
   mandate: MandateDetail;
   transaction: TransactionDetail;
-  evidence_packet: EvidencePacketDetail;
+  // evidence_packet and gate_decision became nullable with Decision 20's fail-closed
+  // exception backstop: a case opened because the pipeline threw has neither (the throw may
+  // have preceded the packet, and the gate was never reached, so no gate_decisions row is
+  // written). fail_closed_reason is set only on that path and carries the exception type.
+  evidence_packet: EvidencePacketDetail | null;
   semantic_assessment: SemanticAssessmentDetail | null;
-  gate_decision: GateDecisionDetail;
+  gate_decision: GateDecisionDetail | null;
+  fail_closed_reason: string | null;
 }
 
 export interface ResolveRequest {
