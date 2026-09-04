@@ -49,7 +49,40 @@ independently in Postgres, not just in the UI. The one cosmetic item flagged at 
 category_shift has its own 4-step scale in frontend/src/components/Badge.tsx
 (none=green, minor=amber, significant=orange, severe=red), while velocity and clustering keep
 the 3-step scale that matches their 3 real bands. Verified against one live case per band.
-NOT STARTED: e2e testing, breaking/fixing pass, demo/video prep.
+
+RED-TEAM PASS (adversarial break/fix against a live server + real Postgres, not unit tests --
+full detail, including reproductions and the reasoning behind each fix's placement, in
+RED_TEAM_LOG.md; that log is the source of truth for this pass, this is the summary):
+- Category 1 (fail-closed integrity): COMPLETE. 7 CRITICALs + 1 MODERATE found, fixed,
+  re-verified live, and committed individually (27a331d, 03600ae, e7f5b30, 171ce63, 49d24f0).
+  Only ONE was a true fail-open: RT-C1-001, attacker-controlled future-dated occurred_at
+  neutralising velocity into a silent ALLOW -- refused at the ingestion boundary via a new
+  versioned IngestionConfig.max_future_skew_minutes, deliberately NOT in the pure evidence
+  engine (injecting a clock there would break the locked C13 numbers' reproducibility). The
+  rest were crashes/500s: Decimal-vs-float on every 2nd transaction per mandate (a latent
+  whole-system outage sitting behind a green test suite), naive tz-less timestamps,
+  Infinity/NaN amounts, NUL bytes, the validation-error handler itself, and a lost
+  idempotency race reporting 500 instead of the winner's replay.
+- RT-C1-008 is OPEN and DEFERRED BY DESIGN, pending a human Decision 20. Baseline §6 locks
+  "unhandled pipeline exception -> HOLD" as a hard invariant; that fourth clause is
+  implemented NOWHERE -- there is no try/except boundary in run_pipeline or
+  api/transactions.py, so any unforeseen throw is a 500 with nothing persisted (no txn, no
+  case, no audit event), breaching eval-design §15's 100% audit-completeness target. It is
+  the systemic root cause behind RT-C1-002..006. Not patched unilaterally because the fix
+  changes what rows exist after a failure -- a persisted-state-contract change that needs a
+  numbered Decision. This is the recommended first item of the next session. Do not
+  implement it without that sign-off.
+- RT-C1-010 (no length cap on merchant/category) COSMETIC, open, deferred to Category 4.
+- Categories 2 (auth/injection boundaries), 3 (frontend/API contract integrity) and 4
+  (demo-killers) NOT YET STARTED. Nothing in the Category 1 pass is evidence about them.
+- Also recorded in RED_TEAM_LOG.md: "verified strengths" -- things actively attacked that
+  held (NaN/inf fall through to the MOST severe band by construction; exact band boundaries
+  sit in the safer band by design, not a bug; resolved-case replay, 409 on key reuse with a
+  different payload, shape validation). Read those before re-testing them.
+- Backend suite now collects 164 tests (151 at C14 + red-team regression tests); not re-run
+  in this session, so treat that as a count, not a green result.
+
+NOT STARTED: e2e testing, red-team Categories 2-4, demo/video prep.
 
 ## The pairing-verification template (hard-won, proven in the pilot — reuse this)
 Signal-first, not narrative-first: pick target bands → backward-solve exact numbers
@@ -88,6 +121,7 @@ VITE_API_BASE_URL / VITE_API_BEARER_TOKEN via frontend/.env (gitignored, see .en
 eval/run_locked_test.py — the locked test-set runner (Checkpoint C13), self-contained,
 deliberately not importing eval/run.py
 eval/generate_dataset.py, eval/verify_pairs.py, eval/generation_log.md
+RED_TEAM_LOG.md — the adversarial break/fix log (Category 1 complete; RT-C1-008 open)
 fixtures/legitimate/, fixtures/drift/, fixtures/ambiguous/
 LABELING_RUBRIC.md
 
