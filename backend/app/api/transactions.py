@@ -21,7 +21,7 @@ from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.auth import require_bearer_token
@@ -39,6 +39,29 @@ class TransactionCreateRequest(BaseModel):
     amount: float = Field(gt=0)
     occurred_at: datetime
     idempotency_key: str
+
+    @field_validator("occurred_at")
+    @classmethod
+    def _require_explicit_timezone(cls, value: datetime) -> datetime:
+        """Red-team finding RT-C1-003: a naive `occurred_at` (e.g. "2026-09-02T10:00:00", a
+        perfectly ordinary ISO spelling) reached compute_velocity and raised
+        `TypeError: can't subtract offset-naive and offset-aware datetimes` against the
+        mandate's tz-aware `created_at` -- a 500, where baseline §6 requires an unhandled
+        pipeline exception to route to HOLD.
+
+        Rejected rather than silently assumed to be UTC: every timestamp this system stores,
+        compares, and reasons about is tz-aware, and guessing an offset would shift a
+        transaction by hours and change its clustering band. That silent-repair-of-ambiguous-
+        input is exactly what this project refuses elsewhere (Decision 3: "not repaired, not
+        defaulted, not best-effort parsed"). Surfacing it as a 400 with an actionable message
+        is both safe and honest.
+        """
+        if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+            raise ValueError(
+                "occurred_at must include an explicit timezone offset "
+                '(e.g. "2026-09-02T10:00:00Z" or "2026-09-02T10:00:00+05:30")'
+            )
+        return value
 
 
 class TransactionCreateResponse(BaseModel):

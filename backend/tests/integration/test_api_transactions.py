@@ -157,3 +157,52 @@ def test_idempotency_key_reuse_with_different_payload_returns_409(api_client, ma
     second = api_client.post("/transactions", json=conflicting, headers=AUTH)
 
     assert second.status_code == 409
+
+
+# ---------------------------------------------------------------------------
+# Regression (red-team Category 1, 2026-09-04): occurred_at timezone handling
+# ---------------------------------------------------------------------------
+
+
+def test_naive_occurred_at_is_rejected_as_400_not_500(api_client, make_mandate):
+    """RT-C1-003. A naive timestamp used to reach compute_velocity and raise
+    `TypeError: can't subtract offset-naive and offset-aware datetimes` -> HTTP 500, i.e. an
+    unhandled pipeline exception, which baseline §6 forbids (it must route to HOLD, never a
+    crash). It is now refused at the ingestion boundary with an actionable 400."""
+    mandate = make_mandate()
+
+    response = api_client.post(
+        "/transactions",
+        json={
+            "mandate_id": str(mandate.id),
+            "merchant": "Kirana",
+            "category": "groceries",
+            "amount": 50,
+            "occurred_at": "2026-09-02T10:00:00",  # no offset
+            "idempotency_key": "idem-naive-ts",
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+
+
+def test_offset_aware_occurred_at_is_accepted(api_client, make_mandate):
+    """The complement of the above -- an explicit non-UTC offset must still be accepted, so
+    the fix rejects only genuinely ambiguous input, not all non-Z timestamps."""
+    mandate = make_mandate()
+
+    response = api_client.post(
+        "/transactions",
+        json={
+            "mandate_id": str(mandate.id),
+            "merchant": "Kirana",
+            "category": "groceries",
+            "amount": 50,
+            "occurred_at": "2026-09-02T10:00:00+05:30",
+            "idempotency_key": "idem-offset-ts",
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
