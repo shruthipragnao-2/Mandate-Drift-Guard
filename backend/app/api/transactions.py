@@ -16,6 +16,7 @@ returns the already-computed prior result without re-running the pipeline; the s
 
 from __future__ import annotations
 
+import math
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Literal
@@ -40,6 +41,48 @@ class TransactionCreateRequest(BaseModel):
     amount: float = Field(gt=0)
     occurred_at: datetime
     idempotency_key: str
+
+    @field_validator("amount")
+    @classmethod
+    def _reject_non_finite_amount(cls, value: float) -> float:
+        """Red-team findings RT-C1-004 (Infinity) and RT-C1-005 (NaN). JSON's spec has no
+        `Infinity`/`NaN`, but Python's `json` module emits and accepts both as an extension,
+        so a client can send them and Starlette will parse them. `Field(gt=0)` does not stop
+        either: `inf > 0` is True, and NaN slips through pydantic's float handling
+        (`allow_inf_nan` defaults on). They then reach persistence and blow up far from the
+        cause -- Infinity as
+        `psycopg2.errors.InvalidTextRepresentation: invalid input syntax for type json` when
+        written to a JSONB column, NaN as
+        `ValueError: Out of range float values are not JSON compliant: nan`. Both surfaced as
+        HTTP 500 with nothing persisted, where baseline §6 requires an unhandled pipeline
+        exception to route to HOLD.
+
+        Worth stating plainly: neither was a fail-OPEN. The evidence engine's band functions
+        are `if ratio <= safe_max: return "<safe band>"`, and every comparison against NaN is
+        False, so a NaN ratio falls through to the *most severe* band -- the banding is
+        fail-closed by construction. These are crashes, not silent ALLOWs.
+        """
+        if not math.isfinite(value):
+            raise ValueError("amount must be a finite number (not NaN or Infinity)")
+        return value
+
+    @field_validator("merchant", "category")
+    @classmethod
+    def _reject_nul_bytes(cls, value: str) -> str:
+        """Red-team finding RT-C1-006. A NUL (0x00) inside merchant/category reached
+        Postgres and raised `ValueError: A string literal cannot contain NUL (0x00)
+        characters` -- HTTP 500, nothing persisted, same §6 violation as above. Postgres TEXT
+        genuinely cannot store NUL, so this is refused at the boundary rather than silently
+        stripped: quietly rewriting a merchant name would corrupt the audit record that the
+        whole system exists to produce.
+
+        Only NUL is rejected. Other unicode -- emoji, RTL marks, combining characters -- is
+        left alone deliberately: it stores and renders fine, and merchant names in the real
+        world legitimately contain it.
+        """
+        if "\x00" in value:
+            raise ValueError("must not contain NUL (0x00) characters")
+        return value
 
     @field_validator("occurred_at")
     @classmethod

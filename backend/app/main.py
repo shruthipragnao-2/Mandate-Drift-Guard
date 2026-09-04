@@ -57,7 +57,29 @@ async def _validation_error_as_400(request: Request, exc: RequestValidationError
     Entity. Checkpoint C12's contract calls for 400 on invalid shape (missing field,
     non-positive amount, malformed timestamp, invalid enum value) -- this handler is the one
     place that mapping happens, application-wide, rather than re-validating by hand in every
-    route."""
+    route.
+
+    Red-team finding RT-C1-007: each entry in `exc.errors()` echoes the rejected value back
+    under `input`, and `jsonable_encoder` cannot serialize `Infinity`/`NaN`
+    ("Out of range float values are not JSON compliant"). So a request carrying a non-finite
+    number made THIS HANDLER raise while reporting the error, turning a correctly-detected
+    400 into a 500 -- the validator had already done its job. Any validation failure whose
+    offending input is non-JSON-serializable hit it, so it could not be fixed by validating
+    harder upstream; the reporting path itself was the bug.
+
+    `input` is dropped rather than coerced. It is attacker-controlled content being reflected
+    straight back into a response, it is not needed to tell a client which field was wrong
+    (`loc` and `msg` carry that), and echoing it is the only reason this handler could fail.
+    `ctx` is stringified because it can hold a live exception object.
+    """
+    safe_errors = [
+        {
+            key: (str(value) if key == "ctx" else value)
+            for key, value in error.items()
+            if key != "input"
+        }
+        for error in exc.errors()
+    ]
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST, content={"detail": jsonable_encoder(exc.errors())}
+        status_code=status.HTTP_400_BAD_REQUEST, content={"detail": jsonable_encoder(safe_errors)}
     )

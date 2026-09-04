@@ -254,3 +254,47 @@ def test_recent_past_occurred_at_still_accepted(api_client, make_mandate):
     )
 
     assert response.status_code == 200
+
+
+def _payload(mandate, **overrides):
+    base = {
+        "mandate_id": str(mandate.id), "merchant": "Kirana", "category": "groceries",
+        "amount": 50, "occurred_at": "2026-09-02T10:00:00Z",
+        "idempotency_key": "idem-unrepresentable",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_non_finite_and_nul_inputs_are_rejected_as_400_not_500(api_client, make_mandate):
+    """RT-C1-004/005/006. Infinity, NaN and NUL bytes all reached persistence and raised
+    (InvalidTextRepresentation / "not JSON compliant" / "cannot contain NUL"), surfacing as
+    HTTP 500 with nothing persisted -- unhandled pipeline exceptions, which baseline §6
+    forbids. Sent as raw content because `json=` cannot express Infinity/NaN."""
+    import json as _json
+
+    mandate = make_mandate()
+    headers = {**AUTH, "Content-Type": "application/json"}
+
+    for label, body in [
+        ("infinity", _json.dumps(_payload(mandate, amount=float("inf")))),
+        ("nan", _json.dumps(_payload(mandate, amount=float("nan")))),
+        ("nul-in-merchant", _json.dumps(_payload(mandate, merchant="Kir\x00ana"))),
+        ("nul-in-category", _json.dumps(_payload(mandate, category="groc\x00eries"))),
+    ]:
+        response = api_client.post("/transactions", content=body, headers=headers)
+        assert response.status_code == 400, f"{label} returned {response.status_code}"
+
+
+def test_ordinary_unicode_merchant_is_still_accepted(api_client, make_mandate):
+    """The NUL rule must not become a general unicode ban -- emoji/RTL/combining marks are
+    legitimate in real merchant names and store fine."""
+    mandate = make_mandate()
+
+    response = api_client.post(
+        "/transactions",
+        json=_payload(mandate, merchant="Café Ω 👻 مرحبا", idempotency_key="idem-unicode-ok"),
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
