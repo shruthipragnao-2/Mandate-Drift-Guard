@@ -523,7 +523,171 @@ Regression coverage added: `tests/integration/test_auth_boundary.py` (28 tests).
 
 ---
 
+---
+
+## Categories 3 and 4 — Frontend/API contract integrity, and demo-killers (COMPLETE, 2026-09-04)
+
+Compressed pass. Run against the real backend on `:8000` and the real Vite dev server, with
+screenshots taken in headless Chrome at 1280px. Where a state could not be reached without
+destroying live demo data (an empty queue) or killing a shared process (backend down), only the
+HTTP *response* was stubbed — the DOM and CSS screenshotted are the real components. That
+distinction is called out per finding rather than glossed.
+
+Nothing here re-tests Category 1's resubmission/double-resolve behaviour, which was already
+established at the API layer (`409` on re-resolve, replay returns current state).
+
+### Summary
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| RT-C4-001 | Vite silently falls back off port 5173 → every API call CORS-blocked | MODERATE | Fixed `8d4c407` |
+| RT-C4-002 | Long unbroken merchant/category/purpose destroys the Case Detail layout | MODERATE | Fixed `8d4c407` |
+| RT-C4-003 | Browser Back exits the app entirely (no history integration) | COSMETIC | Open |
+| RT-C3-001 | Backend-unreachable banner shows raw `TypeError: Failed to fetch` | COSMETIC | Open |
+| RT-C3-002 | A 400 validation error renders as a wall of raw JSON | COSMETIC | Open |
+
+**No CRITICAL findings.**
+
+---
+
+### RT-C4-001 — Vite silently moves off 5173 and every API call is CORS-blocked — MODERATE — FIXED
+
+**Found by accident, which is the only reason it was found at all** — a stale dev server was
+holding 5173, so Vite started on 5174 and the harness could not reach the API.
+
+`backend/app/main.py`'s CORS allowlist names exactly `http://localhost:5173` and
+`http://127.0.0.1:5173`. Vite's default behaviour when 5173 is occupied is to walk quietly to
+5174, print the new URL, and carry on. From that origin the browser blocks every request before
+auth is even consulted:
+
+```
+preflight from http://localhost:5174 -> HTTP/1.1 400 Bad Request   (no access-control-allow-origin)
+preflight from http://localhost:5173 -> HTTP/1.1 200 OK            access-control-allow-origin: http://localhost:5173
+```
+
+The failure mode is the dangerous kind for a demo: the UI **loads and renders perfectly**, and
+then every screen shows `Failed to load cases: TypeError: Failed to fetch`. Neither process logs
+anything explaining it. Any leftover dev server — including one from an earlier session that a
+presenter has forgotten about — is enough to trigger it, and the symptom looks exactly like "the
+backend is broken" five minutes before a pitch.
+
+**Fix:** `server: { port: 5173, strictPort: true }` in `vite.config.ts`. Vite now refuses to
+start rather than starting on a port the backend will reject — failing loudly at startup over
+failing mysteriously mid-demo, which is the same fail-closed preference the backend applies
+everywhere else.
+
+Deliberately **not** fixed by widening the CORS allowlist: that trades a silent failure for a
+looser origin policy, and the next occupied port reintroduces it anyway.
+
+---
+
+### RT-C4-002 — Long unbroken strings destroy the Case Detail layout — MODERATE — FIXED
+
+This is the visible consequence of **RT-C1-010** (no length cap on `merchant`/`category`), which
+Category 1 logged as COSMETIC and deferred to exactly this pass.
+
+Submitted a real transaction with a 432-character merchant, a 188-character category, and a
+mandate whose purpose is 363 characters — all unbroken, no spaces, which is not exotic: real
+merchant descriptors frequently have none.
+
+Before, at 1280px wide:
+
+- The mandate-context card's `repeat(3, 1fr)` grid blew out — **"Budget / period" and "Allowed
+  categories" were pushed entirely off-screen**, so the analyst lost the mandate's budget and
+  allowed-category list, which are precisely the context needed to judge the case.
+- Merchant and category ran past the right edge of their card and past the viewport, producing
+  horizontal page scroll.
+
+Cause: an unbroken string's min-content width equals its full length, so a `1fr` or `auto` grid
+track grows to fit it instead of wrapping.
+
+**Fix:** `overflow-wrap: anywhere` (plus `min-width: 0`) on the specific containers that carry
+unbounded server-supplied text — `.mandate-context-value`, `.detail-grid > span`,
+`.case-table td`, `.rule-applied`, `.banner`, `.evidence-list li`. Not applied globally:
+`.case-row-action`'s `white-space: nowrap` and the badge row are left alone deliberately.
+
+`anywhere` rather than `break-word` matters and is not interchangeable here: `break-word` still
+lets the element claim its full min-content width when the grid track is sized, so the track
+blows out even though the text later wraps. `anywhere` makes the break opportunities count
+during intrinsic sizing, which is the half that actually keeps the card intact.
+
+Re-screenshotted after the fix: all three fields wrap inside their cards, the 3-column grid is
+restored with budget and allowed categories visible again, and nothing overflows the viewport.
+
+Note this fixes the *symptom*, not RT-C1-010 itself — the API still accepts a 100,000-character
+merchant. That remains open and is now a data-hygiene question rather than a demo risk.
+
+---
+
+### RT-C4-003 — Browser Back exits the app — COSMETIC — open
+
+`App.tsx` holds the current screen in a `useState` union and integrates with browser history
+**not at all** — `grep -rn "pushState|replaceState|popstate|history\."` over `frontend/src/`
+returns 0 hits. So Back from Case Detail does not return to the queue; it leaves the
+application.
+
+Not fixed. It is a direct consequence of C14's stated, deliberate choice ("Three screens, no
+router library"), and adding history handling now is a change to the app's navigation model
+rather than a bug fix, on the day before submission. The in-app "← Back to queue" button works
+correctly and is the intended path.
+
+**Demo guidance, which is the actionable part:** use the in-app Back button, not the browser's.
+
+---
+
+### RT-C3-001 — Backend-unreachable message is developer jargon — COSMETIC — open
+
+With the backend unreachable, the queue renders a red error banner reading
+`Failed to load cases: TypeError: Failed to fetch`, alongside a working Refresh button.
+
+**The important half is that this behaves correctly**: no blank screen, no infinite spinner, no
+unhandled promise rejection, and the user can retry without reloading. The finding is only that
+`TypeError: Failed to fetch` is meaningless to a Risk/Trust Ops analyst — "Cannot reach the
+Mandate Drift Guard API" would say the same thing usefully. Logged, not fixed; cosmetic copy on
+an error path that is itself sound.
+
+---
+
+### RT-C3-002 — Validation errors render as raw JSON — COSMETIC — open
+
+`api.ts` builds its banner text as `${err.status}: ${JSON.stringify(err.detail)}`. For a 404
+that reads acceptably (`404: {"detail":"mandate not found"}`), but a 400 from a body-shape
+failure returns FastAPI's full error array, so the banner becomes a wall of `type`/`loc`/`msg`/
+`ctx` JSON including the pydantic message text. Same judgement as RT-C3-001: correct behaviour,
+poor copy, not worth changing this close to submission.
+
+---
+
+### Verified strengths (Categories 3 and 4)
+
+- **The Resolve button cannot be double-submitted from the UI.** Both Confirm and Deny carry
+  `disabled={submitting}`, `setSubmitting(true)` runs before the `await`, and it is deliberately
+  never reset on success — the component navigates away instead, so there is no window in which
+  a second click can land. The API-level race (Category 1, RT-C1-009) is therefore a backstop
+  here, not the primary guard.
+- **The queue cannot show a stale resolved case.** Two independent mechanisms: `CaseQueue` is
+  unmounted whenever the detail screen renders (plain `&&` conditional), so returning always
+  remounts and refetches; and `onResolved` additionally bumps a `queueRefreshKey` used as the
+  component's `key`, forcing a remount even if the first mechanism ever stopped applying. There
+  is no cached case list to go stale — `useEffect` refetches on every mount.
+- **An unknown mandate surfaces cleanly.** Editing the mandate select's value in dev tools to a
+  well-formed but unknown UUID returns `404 {"detail":"mandate not found"}`, which `api.ts`
+  raises as `ApiError` and `SimulateTransaction` catches in a `try/catch/finally` — error banner
+  shown, `submitting` reset, form still usable. No blank screen and no unhandled rejection: the
+  async handler's errors are all caught internally, and `finally` guarantees the button
+  re-enables.
+- **The empty queue still reads as a good outcome.** Rendered live: "No cases on hold." plus
+  "an empty queue is the system working as intended, not an error." Confirmed still correct
+  after the C14 build. (HTTP response stubbed to `{"cases": []}` — the alternative was resolving
+  the live demo queue.)
+- **Long strings do not break the Case Queue table**, only the detail screen, and the same fix
+  covers `.case-table td`.
+
+---
+
 ## Not yet run
 
-Categories 3 (frontend/API contract integrity) and 4 (demo-killers) remain deferred. Nothing in
-Categories 1 or 2 should be read as evidence about them.
+Nothing. Red-team Categories 1–4 are complete. Open items carried forward: RT-C1-010 (no length
+cap on `merchant`/`category`, COSMETIC), RT-C2-001 (unauthenticated API schema, COSMETIC,
+accepted), RT-C2-003 (`mandate.purpose` becomes an injection surface if `POST /mandates` is ever
+built, COSMETIC, forward-looking), RT-C4-003 and RT-C3-001/002 (COSMETIC UI polish, above).
