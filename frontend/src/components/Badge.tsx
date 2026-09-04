@@ -5,23 +5,36 @@
 //   category_shift: none | minor | significant | severe
 //   clustering:     normal | clustered | highly_clustered
 //
-// The spec's 3-color rule (green=normal/none, amber=elevated/minor/clustered,
-// red=critical/severe/highly_clustered) doesn't assign category_shift's 4th value,
-// "significant", to any color -- it sits between "minor" and "severe" in the real band
-// ordering. Bucketed here as amber (the same tier as "minor"), since with only 3 colors for
-// 4 ordered bands, splitting green=1/amber=2/red=1 is the least arbitrary option -- flagged
-// in this project's report-back rather than resolved silently.
-const GREEN = new Set(["normal", "none"]);
-const AMBER = new Set(["elevated", "minor", "significant", "clustered"]);
-const RED = new Set(["critical", "severe", "highly_clustered"]);
+// velocity and clustering have three bands each, so they map 1:1 onto green/amber/red.
+// category_shift has FOUR, and collapsing it into the same three colors made "minor" and
+// "significant" render identically -- the one place the band scales genuinely differ. It now
+// has its own four-step scale (human-approved 2026-09-04), so a "significant" shift is
+// visually distinct from a "minor" one at a glance during the demo.
+export type BadgeTone = "green" | "amber" | "orange" | "red" | "neutral";
 
-export type BadgeTone = "green" | "amber" | "red" | "neutral";
+// velocity: normal | elevated | critical -- clustering: normal | clustered | highly_clustered
+const BAND_TONE: Record<string, BadgeTone> = {
+  normal: "green",
+  elevated: "amber",
+  critical: "red",
+  clustered: "amber",
+  highly_clustered: "red",
+};
 
 export function toneForBand(band: string): BadgeTone {
-  if (GREEN.has(band)) return "green";
-  if (AMBER.has(band)) return "amber";
-  if (RED.has(band)) return "red";
-  return "neutral";
+  return BAND_TONE[band] ?? "neutral";
+}
+
+// category_shift: none | minor | significant | severe -- its own four-step scale.
+const CATEGORY_SHIFT_TONE: Record<string, BadgeTone> = {
+  none: "green",
+  minor: "amber",
+  significant: "orange",
+  severe: "red",
+};
+
+export function toneForCategoryShift(band: string): BadgeTone {
+  return CATEGORY_SHIFT_TONE[band] ?? "neutral";
 }
 
 const RISK_TONE: Record<string, BadgeTone> = {

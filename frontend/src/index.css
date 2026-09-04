@@ -13,6 +13,10 @@
   --green-text: #1e7d34;
   --amber-bg: #fdf1dc;
   --amber-text: #96650a;
+  /* Deliberately red-shifted away from amber's yellow-brown, so category_shift's "minor" and
+     "significant" are distinguishable side by side, not just nominally different tokens. */
+  --orange-bg: #ffe3d1;
+  --orange-text: #c2410c;
   --red-bg: #fbe7e7;
   --red-text: #b3261e;
   --neutral-bg: #eef0f3;
@@ -287,6 +291,11 @@ button {
 .badge-amber {
   background: var(--amber-bg);
   color: var(--amber-text);
+}
+
+.badge-orange {
+  background: var(--orange-bg);
+  color: var(--orange-text);
 }
 
 .badge-red {

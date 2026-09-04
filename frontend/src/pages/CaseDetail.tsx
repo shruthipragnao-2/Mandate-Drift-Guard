@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, getCaseDetail, resolveCase } from "../api";
-import { Badge, toneForAlignment, toneForBand, toneForRisk } from "../components/Badge";
+import { Badge, toneForAlignment, toneForBand, toneForCategoryShift, toneForRisk } from "../components/Badge";
 import type { CaseDetailResponse } from "../types";
 
 export function CaseDetail({
@@ -114,7 +114,7 @@ export function CaseDetail({
                 {detail.evidence_packet.signals.category_shift && (
                   <Badge
                     label={`category shift: ${detail.evidence_packet.signals.category_shift}`}
-                    tone={toneForBand(detail.evidence_packet.signals.category_shift)}
+                    tone={toneForCategoryShift(detail.evidence_packet.signals.category_shift)}
                   />
                 )}
                 {detail.evidence_packet.signals.clustering && (

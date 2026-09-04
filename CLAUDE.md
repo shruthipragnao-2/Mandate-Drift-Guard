@@ -43,10 +43,12 @@ main.py (required for the separately-served frontend dev server to reach the API
 discovered live, not anticipated). 151 backend tests passing. Frontend built under frontend/
 (Vite+React+TS, 3 screens: Case Queue, Case Detail with the 4-step timeline, Simulate
 Transaction) and verified against the live backend via a real submitted transaction, confirmed
-independently in Postgres, not just in the UI. One unresolved cosmetic note: the spec's
-3-color band mapping doesn't assign category_shift's 4th real band value ("significant") --
-bucketed as amber in frontend/src/components/Badge.tsx, flagged there and in the C14
-completion report, not silently decided.
+independently in Postgres, not just in the UI. The one cosmetic item flagged at C14 -- that a
+3-color band scale couldn't represent category_shift's 4 real bands, leaving "minor" and
+"significant" rendering identically -- is now resolved (human-approved 2026-09-04):
+category_shift has its own 4-step scale in frontend/src/components/Badge.tsx
+(none=green, minor=amber, significant=orange, severe=red), while velocity and clustering keep
+the 3-step scale that matches their 3 real bands. Verified against one live case per band.
 NOT STARTED: e2e testing, breaking/fixing pass, demo/video prep.
 
 ## The pairing-verification template (hard-won, proven in the pilot — reuse this)
