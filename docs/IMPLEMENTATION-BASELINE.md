@@ -823,3 +823,38 @@ deeply-deliberated product decision**, changeable via config edit alone, consist
 pattern already established (Decisions 9–11, 13–15). A timed-out case transitions directly to
 `resolved_block` (`resolved_by="system:timeout"`) — BLOCK remains reachable only via HOLD,
 never directly from `EVALUATING` (baseline §7, unchanged).
+
+---
+
+## 23. Decision 19 (Checkpoint C13 pre-execution, human sign-off 2026-09-04)
+
+Resolves the `[OPEN]` row in docs/IMPLEMENTATION-PLAN.md §S — "`C_fp` / `C_fn` cost values and
+ratio ... Needed for the business-metric calculation ... Before M6/M8" — surfaced during C13
+prep on 2026-09-04 as still open against that plan's own stated M8 gating rule ("M8 is
+explicitly gated on every scoring-relevant open item in §S resolved").
+
+**`[LOCKED — Decision 19, human sign-off 2026-09-04]` The cost-weighted business metric
+(`Total_cost = FP_count × C_fp + FN_count × C_fn`, and the underlying `C_fp`/`C_fn` dollar
+values and FN:FP ratio) is explicitly descoped from this submission.** Rationale: assigning
+real dollar costs requires actual operational data — the true cost of a false HOLD to user
+experience, the true cost of a missed drift case — that an external hackathon team has no
+access to and should not fabricate. Inventing plausible-looking numbers here would violate
+this project's own "generation is not verification" discipline applied to metrics rather than
+data — a fabricated cost ratio would look like a real quantitative result without being one.
+
+**What is reported instead:** the full Tier 1 metric set that does not depend on this input —
+precision/recall/F1/FPR by drift_type (§7), `Drift_cases_caught_only_by_hybrid` (§9),
+abstention metrics (§12), gate-rule-violation count (§14), and audit completeness (§15) — all
+already implemented in `eval/report.py` and reused unchanged by `eval/run_locked_test.py`
+(Checkpoint C13 Part 2). This is not a silent gap: it is recorded here, and will be restated in
+the locked-test-set report itself, as a known limitation and a natural next input once real
+operational cost data exists — not as a metric that was overlooked.
+
+**What this decision does NOT do:** it does not edit docs/IMPLEMENTATION-PLAN.md's §S table —
+that table's `C_fp`/`C_fn` row still literally reads `[OPEN]`, and stays that way, since
+resolutions are recorded in this baseline document, addition-only, not by amending the plan
+document itself (this project's own operating rule). A reader consulting §S in isolation should
+cross-reference this decision rather than conclude the item was silently missed. This decision
+does not touch any other row of §S, and does not itself declare every scoring-relevant item in
+§S resolved — it resolves the one row that was flagged during C13 prep as blocking the metric
+set actually built.

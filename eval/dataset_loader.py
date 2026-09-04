@@ -122,6 +122,44 @@ def load_dev_cases(session) -> list[CaseRecord]:
     return [_to_case_record(row) for row in rows]
 
 
+def load_test_cases(session, *, confirm: bool) -> list[CaseRecord]:
+    """The ONLY sanctioned way to read `dataset_cases` rows with split == "test" -- the locked
+    test set every other script in this project must never touch. Mirrors `load_dev_cases()`'s
+    shape but inverted, and is deliberately kept separate from it rather than added as a
+    parameter to the same function, so the dev-set code path above is untouched by this one's
+    existence.
+
+    `confirm` is a required keyword-only argument with no default specifically so this cannot
+    be invoked by accident -- via positional-argument reordering, a copied call site, or a
+    variable that happens to be truthy. It must be the literal `True` typed at the call site by
+    a human-reviewed script. As of Checkpoint C13, that is exactly one call site:
+    eval/run_locked_test.py's dedicated, one-time locked-test-set run.
+
+    Two ways to fail closed rather than proceed with a bad locked-test-set run:
+    - `confirm is not True`: refuses outright, even for a merely truthy value (`1`, `"yes"`) --
+      it must be the literal boolean, never a stand-in that happens to pass a truthiness check.
+    - The query returns zero rows: refuses rather than silently reporting an empty, vacuous run
+      as if it were a real result -- the exact failure mode `dataset_cases` was found in during
+      C13 prep on 2026-09-04 (wiped empty by an unmarked migration round-trip test), before it
+      was repopulated. An empty table must never be mistaken for "zero test cases by design."
+    """
+    if confirm is not True:
+        raise TestSplitAccessError(
+            "load_test_cases() called without confirm=True (the literal boolean) -- refusing "
+            "to read the locked test set. This function exists for exactly one call site: "
+            "Checkpoint C13's dedicated, one-time locked-test-set run."
+        )
+
+    rows = session.query(DatasetCase).filter(DatasetCase.split == "test").all()
+    if not rows:
+        raise TestSplitAccessError(
+            "load_test_cases() query returned zero split='test' rows -- refusing to proceed "
+            "with a vacuous locked-test-set run. Confirm dataset_cases is populated (see "
+            "eval/populate_dataset_cases.py) before retrying."
+        )
+    return [_to_case_record(row) for row in rows]
+
+
 def upsert_log_section(path: Path, marker: str, content: str) -> None:
     """Replace the named section in `path` if one already exists, else append it -- shared by
     eval/calibrate_baseline.py's sweep-table writer and eval/run.py's dev-set-run-summary

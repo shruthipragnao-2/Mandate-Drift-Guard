@@ -181,3 +181,74 @@ An encouraging n=5 spot-check did not survive n=34. That is the reusable lesson 
 - **`schema_validation_pass_rate` favours v2** (0.8485 → 1.0000) and is reported here rather than omitted, since it cuts against the verdict. The formula is unchanged between runs, so it is a real observation; but with one run each it may be sampling variance rather than a property of the prompt. It was not treated as decisive either way.
 - **v1's reliability block lacks `llm_status_counts` and `timeout_rate`** — those fields did not exist at `07fedc8`. Those two v2 figures have no v1 counterpart and are therefore excluded from the table rather than compared against an assumed value.
 - **The prior dev-set summary in this log was overwritten** by the v2 run before this section existed (the DEV_RUN_SUMMARY block is regenerable). The v1 column above is reconstructed from the committed `07fedc8` JSON artifact, which is why provenance is spelled out above: it is recoverable from git, not from this log's own history.
+
+<!-- SECTION:LOCKED_TEST_SET_RUN:START -->
+# LOCKED Test-Set Run — Checkpoint C13 / Milestone M8 (2026-09-04)
+
+**This is the final, one-time locked-test-set run. These are the numbers that get reported.** No further threshold or prompt change may follow this run without invalidating it -- per docs/IMPLEMENTATION-BASELINE.md's "touched exactly once, at the end" policy, this section is not expected to ever be regenerated. If it ever is, that is itself a finding to report, not a routine rerun.
+
+*eval/run_locked_test.py, run against the LOCKED TEST SET ONLY (eval/dataset_loader.py's `load_test_cases(confirm=True)`, the sole sanctioned reader of split='test' rows). 66 cases, prompt_version="v1", rules-only threshold_T=0.05 (hardcoded, not recalibrated against this data).*
+
+## §7 Primary metrics (precision/recall/F1/FPR), by drift_type
+
+**fast_spike**
+- rules_only: TP=6 FP=6 FN=8 TN=8 P=0.5000 R=0.4286 F1=0.4615 FPR=0.4286
+- hybrid: TP=14 FP=14 FN=0 TN=0 P=0.5000 R=1.0000 F1=0.6667 FPR=1.0000
+
+**slow_drift**
+- rules_only: TP=5 FP=5 FN=9 TN=9 P=0.5000 R=0.3571 F1=0.4167 FPR=0.3571
+- hybrid: TP=12 FP=13 FN=2 TN=1 P=0.4800 R=0.8571 F1=0.6154 FPR=0.9286
+
+## §8 Gate-decision distribution (hybrid): {'allow': 0.07575757575757576, 'hold': 0.8333333333333334, 'none': 0.09090909090909091}
+
+## §9 Drift_cases_caught_only_by_hybrid: 15
+
+## §12 Abstention metrics: {'n_ambiguous': 10, 'correct_abstention_rate': 0.2, 'overconfidence_on_ambiguous_rate': 0.2, 'n_legitimate': 28, 'unnecessary_hold_rate': 0.9642857142857143}
+
+## §14 Gate-rule-violation count (measured, target 0): 0
+
+## §15 Audit completeness: {'total': 66, 'complete': 66, 'rate': 1.0}
+
+## §16 Reliability: {'llm_calls': 60, 'llm_status_counts': {'success': 60}, 'schema_validation_pass_rate': 1.0, 'timeout_rate': 0.0, 'pipeline_error_rate': 0.0, 'pipeline_error_count': 0}
+
+## Decision 15 clearance, single-signal/legitimate subset: {'n_subset': 7, 'n_cleared': 1, 'cleared_case_ids': ['0eedabac-7201-4d5e-ab9c-eefe59a63ec0']}
+<!-- SECTION:LOCKED_TEST_SET_RUN:END -->
+
+
+<!-- SECTION:LOCKED_TEST_SET_RUN_ATTEMPT_1_VOID:START -->
+# LOCKED Test-Set Run — ATTEMPT 1 (VOID, 2026-09-04)
+
+**VOID.** This attempt failed due to a working-directory error during invocation, not a system defect: `eval/run_locked_test.py` was run with cwd=repo root instead of cwd=backend/ (this project's established convention for every other eval/test invocation). `app.config.Settings` resolves its `env_file` relative to the process's current working directory (confirmed by reading `DotEnvSettingsSource._read_env_files`), so `backend/.env` was never found, `anthropic_api_key` silently defaulted to `None`, and every case whose deterministic signals crossed the threshold failed with an Anthropic SDK authentication error (`Could not resolve authentication method...`) instead of producing a real assessment -- 60 of 66 cases errored this way, and the remaining 6 simply never triggered an LLM call. Zero cases produced real LLM output; the hybrid-column metrics below are consequently degenerate (all-zero confusion matrices, 100% "none" gate decisions) and must not be read as a real result. `app/config.py` has since been fixed to anchor `.env` resolution to its own file location rather than the caller's cwd. This attempt is void and superseded by the immediate re-run recorded in the "LOCKED_TEST_SET_RUN" section above/below -- retained here, unaltered, for transparency per this project's documentation discipline, not deleted or hidden.
+
+---
+
+# LOCKED Test-Set Run — Checkpoint C13 / Milestone M8 (2026-09-04)
+
+**This is the final, one-time locked-test-set run. These are the numbers that get reported.** No further threshold or prompt change may follow this run without invalidating it -- per docs/IMPLEMENTATION-BASELINE.md's "touched exactly once, at the end" policy, this section is not expected to ever be regenerated. If it ever is, that is itself a finding to report, not a routine rerun.
+
+*eval/run_locked_test.py, run against the LOCKED TEST SET ONLY (eval/dataset_loader.py's `load_test_cases(confirm=True)`, the sole sanctioned reader of split='test' rows). 66 cases, prompt_version="v1", rules-only threshold_T=0.05 (hardcoded, not recalibrated against this data).*
+
+## §7 Primary metrics (precision/recall/F1/FPR), by drift_type
+
+**fast_spike**
+- rules_only: TP=6 FP=6 FN=8 TN=8 P=0.5000 R=0.4286 F1=0.4615 FPR=0.4286
+- hybrid: TP=0 FP=0 FN=14 TN=14 P=0.0000 R=0.0000 F1=0.0000 FPR=0.0000
+
+**slow_drift**
+- rules_only: TP=5 FP=5 FN=9 TN=9 P=0.5000 R=0.3571 F1=0.4167 FPR=0.3571
+- hybrid: TP=0 FP=0 FN=14 TN=14 P=0.0000 R=0.0000 F1=0.0000 FPR=0.0000
+
+## §8 Gate-decision distribution (hybrid): {'allow': 0.0, 'hold': 0.0, 'none': 1.0}
+
+## §9 Drift_cases_caught_only_by_hybrid: 0
+
+## §12 Abstention metrics: {'n_ambiguous': 10, 'correct_abstention_rate': 0.0, 'overconfidence_on_ambiguous_rate': 0.0, 'n_legitimate': 28, 'unnecessary_hold_rate': 0.0}
+
+## §14 Gate-rule-violation count (measured, target 0): 0
+
+## §15 Audit completeness: {'total': 66, 'complete': 6, 'rate': 0.09090909090909091}
+
+## §16 Reliability: {'llm_calls': 0, 'llm_status_counts': {}, 'schema_validation_pass_rate': None, 'timeout_rate': None, 'pipeline_error_rate': 0.9090909090909091, 'pipeline_error_count': 60}
+
+## Decision 15 clearance, single-signal/legitimate subset: {'n_subset': 0, 'n_cleared': 0, 'cleared_case_ids': []}
+<!-- SECTION:LOCKED_TEST_SET_RUN_ATTEMPT_1_VOID:END -->

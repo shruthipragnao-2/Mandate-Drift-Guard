@@ -13,12 +13,27 @@ exact values, and architecture's own framing of thresholds as a versioned config
 hardcoded) applies to all three.
 """
 
+from pathlib import Path
+
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Anchored to this file's own location (backend/app/config.py -> backend/.env), NOT left as a
+# bare relative ".env" -- pydantic-settings resolves a relative env_file against the invoking
+# process's current working directory (confirmed 2026-09-04 by reading
+# DotEnvSettingsSource._read_env_files: `Path(env_file).expanduser()` then `.is_file()`, with
+# no fallback or warning if that check fails -- Settings() just silently falls through to
+# field defaults). A script invoked from any directory other than backend/ (the project's own
+# convention, but not something Python enforces) would load no .env at all and get
+# `anthropic_api_key=None` with no error until the first real API call -- exactly what
+# happened during Checkpoint C13's first, void locked-test-set attempt (see
+# eval/calibration_log.md's "ATTEMPT 1 (VOID)" section). Resolving here, once, removes the
+# cwd dependency for every future invocation regardless of what directory it's run from.
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_ENV_FILE, env_file_encoding="utf-8", extra="ignore")
 
     app_env: str = "development"
     log_level: str = "INFO"

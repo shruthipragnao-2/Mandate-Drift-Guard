@@ -1,0 +1,1153 @@
+{
+  "run_kind": "LOCKED_TEST_SET -- Checkpoint C13 / Milestone M8 -- one-time, non-repeatable",
+  "run_date": "2026-09-04",
+  "n_cases": 66,
+  "threshold_t": 0.05,
+  "prompt_version": "v1",
+  "primary_metrics": {
+    "fast_spike": {
+      "rules_only": {
+        "tp": 6,
+        "fp": 6,
+        "fn": 8,
+        "tn": 8,
+        "precision": 0.5,
+        "recall": 0.42857142857142855,
+        "f1": 0.4615384615384615,
+        "fpr": 0.42857142857142855,
+        "fnr": 0.5714285714285714
+      },
+      "hybrid": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 14,
+        "tn": 14,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0
+      }
+    },
+    "slow_drift": {
+      "rules_only": {
+        "tp": 5,
+        "fp": 5,
+        "fn": 9,
+        "tn": 9,
+        "precision": 0.5,
+        "recall": 0.35714285714285715,
+        "f1": 0.41666666666666663,
+        "fpr": 0.35714285714285715,
+        "fnr": 0.6428571428571429
+      },
+      "hybrid": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 14,
+        "tn": 14,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "fpr": 0.0,
+        "fnr": 1.0
+      }
+    }
+  },
+  "drift_cases_caught_only_by_hybrid": 0,
+  "abstention_metrics": {
+    "n_ambiguous": 10,
+    "correct_abstention_rate": 0.0,
+    "overconfidence_on_ambiguous_rate": 0.0,
+    "n_legitimate": 28,
+    "unnecessary_hold_rate": 0.0
+  },
+  "gate_rule_violation_count": 0,
+  "audit_completeness": {
+    "total": 66,
+    "complete": 6,
+    "rate": 0.09090909090909091
+  },
+  "reliability_metrics": {
+    "llm_calls": 0,
+    "llm_status_counts": {},
+    "schema_validation_pass_rate": null,
+    "timeout_rate": null,
+    "pipeline_error_rate": 0.9090909090909091,
+    "pipeline_error_count": 60
+  },
+  "gate_decision_distribution": {
+    "allow": 0.0,
+    "hold": 0.0,
+    "none": 1.0
+  },
+  "decision15_single_signal_legitimate_clearance": {
+    "n_subset": 0,
+    "n_cleared": 0,
+    "cleared_case_ids": []
+  },
+  "cases": [
+    {
+      "case_id": "072ebf24-bd3c-4993-96d2-e8fb9904d0ee",
+      "fixture_path": "fixtures/drift/pair_004_fast_spike_combined_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "edec4790-9bc8-490d-b3ec-23330078df0d",
+      "fixture_path": "fixtures/legitimate/pair_004_fast_spike_combined_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "56b55e89-a470-46bb-ab29-47cae198531d",
+      "fixture_path": "fixtures/drift/pair_005_fast_spike_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999984444440986>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "5efa6694-46b7-4a58-bf3e-90e015cc5be2",
+      "fixture_path": "fixtures/legitimate/pair_005_fast_spike_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999984444440986>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "e5b4d24e-bd92-482f-bfb8-e54fdc0e55f4",
+      "fixture_path": "fixtures/legitimate/pair_006_fast_spike_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "86d578ef-05e6-4b2e-95ae-a6743648c355",
+      "fixture_path": "fixtures/drift/pair_006_fast_spike_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "e1f1fd64-a4c7-4fed-9c62-a1e0fc9a13b6",
+      "fixture_path": "fixtures/drift/pair_007_fast_spike_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "5da79026-e1d3-4d51-9706-aca08bab6846",
+      "fixture_path": "fixtures/legitimate/pair_007_fast_spike_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "287c4561-f2c1-47c5-bc30-b7cfaf0b5b0b",
+      "fixture_path": "fixtures/drift/pair_010_fast_spike_combined_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.1>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "20980d12-346c-4a4c-9207-d86f150cfe8d",
+      "fixture_path": "fixtures/legitimate/pair_010_fast_spike_combined_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.1>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "73fe6a24-d5d3-4ca4-b91a-4c436cb3492e",
+      "fixture_path": "fixtures/drift/pair_011_fast_spike_single_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "786e0123-5a65-4df1-9ff6-d04e32a95029",
+      "fixture_path": "fixtures/legitimate/pair_011_fast_spike_single_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c3b6842f-b44d-4cab-9f7a-627401f8de02",
+      "fixture_path": "fixtures/drift/pair_012_fast_spike_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "deb9bc86-79fa-4d0d-821f-ee1b8412c0e0",
+      "fixture_path": "fixtures/legitimate/pair_012_fast_spike_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "3283faf7-88a6-49cf-9982-6b9030362bda",
+      "fixture_path": "fixtures/drift/pair_014_fast_spike_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.34999991898150024>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "929fbd86-83f8-4077-aedb-1d4d0e0661c0",
+      "fixture_path": "fixtures/legitimate/pair_014_fast_spike_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.34999991898150024>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "1fb085bb-013f-484b-9446-29c1981ab035",
+      "fixture_path": "fixtures/drift/pair_020_fast_spike_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.25000040509249877>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "6cee1fa6-434b-4f04-b66b-54e75aa914a2",
+      "fixture_path": "fixtures/drift/pair_015_fast_spike_combined_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.600000197368486>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "fb766018-3ad2-42ad-a0f7-beaed240cf44",
+      "fixture_path": "fixtures/legitimate/pair_015_fast_spike_combined_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.600000197368486>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c1ada1db-7dc7-41a5-844c-46b392a85082",
+      "fixture_path": "fixtures/drift/pair_016_fast_spike_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "43c758d3-a5c7-48eb-ba0b-24a4f1d97af4",
+      "fixture_path": "fixtures/legitimate/pair_016_fast_spike_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "904db204-3fb6-4777-8048-b3c91ff5095f",
+      "fixture_path": "fixtures/drift/pair_026_slow_drift_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999929999930003>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "7f9bc95a-5916-4355-8242-af0a5e5e249d",
+      "fixture_path": "fixtures/ambiguous/ambiguous_004_velocity_boundary_bills.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "ab6dfedb-1dea-41bd-9a46-712a1a4dbd21",
+      "fixture_path": "fixtures/legitimate/pair_020_fast_spike_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.25000040509249877>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "4c17450b-0549-4650-8381-b7b180907cf2",
+      "fixture_path": "fixtures/drift/pair_021_fast_spike_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c83bccd7-8173-497c-be1a-c12a932f2828",
+      "fixture_path": "fixtures/legitimate/pair_021_fast_spike_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c35d1857-5855-431a-be3f-6186bee8e6ee",
+      "fixture_path": "fixtures/drift/pair_022_fast_spike_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c431c901-50c1-42ec-9751-e0cc7b9eaf16",
+      "fixture_path": "fixtures/legitimate/pair_022_fast_spike_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "65d76498-3193-4b75-a4aa-678f3466dfed",
+      "fixture_path": "fixtures/drift/pair_024_fast_spike_combined_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6000002343750915>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "9b25841d-731b-4837-9cbd-2110203508ab",
+      "fixture_path": "fixtures/legitimate/pair_024_fast_spike_combined_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6000002343750915>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "68a645bb-4755-4695-abde-04cba2174e3b",
+      "fixture_path": "fixtures/drift/pair_025_slow_drift_combined_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08000038181783471 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "7f3484ae-ca4b-4508-ad76-12f23970db56",
+      "fixture_path": "fixtures/legitimate/pair_025_slow_drift_combined_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08000038181783471 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "fa916293-8f6c-404a-a9b6-6314ac73ad8b",
+      "fixture_path": "fixtures/ambiguous/ambiguous_005_category_shift_boundary_telephone.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.2 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c095adee-f71c-419e-a812-1154aadc3a1b",
+      "fixture_path": "fixtures/legitimate/pair_026_slow_drift_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999929999930003>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c60fbaa5-5574-4a7a-b9cc-1a7d130f05b2",
+      "fixture_path": "fixtures/drift/pair_027_slow_drift_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "02fec268-1638-437b-a6da-5c45a6497082",
+      "fixture_path": "fixtures/legitimate/pair_027_slow_drift_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "a6851c13-f4a1-4d83-948a-99f4df0bcc0e",
+      "fixture_path": "fixtures/drift/pair_028_slow_drift_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.15000055681856148 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "0eedabac-7201-4d5e-ab9c-eefe59a63ec0",
+      "fixture_path": "fixtures/legitimate/pair_028_slow_drift_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.15000055681856148 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "1a83ba82-c9f4-4ffe-8214-723e4980a334",
+      "fixture_path": "fixtures/drift/pair_031_slow_drift_combined_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.1 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "01ebabe6-d773-4ad8-9617-5f1952f9c61b",
+      "fixture_path": "fixtures/legitimate/pair_031_slow_drift_combined_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.1 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "666e5286-6fa5-4d6f-ab87-e3ceb5f73fca",
+      "fixture_path": "fixtures/ambiguous/ambiguous_006_velocity_boundary_fuel.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "87e60886-3c99-44d1-8e43-b1e500b19d7a",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "8f5da46e-1425-416d-ab01-1fc963c8e021",
+      "fixture_path": "fixtures/drift/pair_032_slow_drift_single_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.4000014000014 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "ea9b4d9f-f069-444a-92a7-de93e270f2f9",
+      "fixture_path": "fixtures/legitimate/pair_032_slow_drift_single_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.4000014000014 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "78336a05-4853-45ff-a720-f3791ff51d90",
+      "fixture_path": "fixtures/drift/pair_033_slow_drift_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.5999991515159228 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "dce7d412-639a-45af-b04c-1c5e8efdcb88",
+      "fixture_path": "fixtures/legitimate/pair_033_slow_drift_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.5999991515159228 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "2469797e-9c19-48ae-8267-54caa32ce86e",
+      "fixture_path": "fixtures/drift/pair_035_slow_drift_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.350000077777795>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "f7faad4d-e611-4e96-8b69-8966470940dd",
+      "fixture_path": "fixtures/legitimate/pair_035_slow_drift_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.350000077777795>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "07704936-1440-4f1b-88ec-d8ca4c1b153b",
+      "fixture_path": "fixtures/drift/pair_036_slow_drift_combined_bills_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "8e671443-1f38-4522-bd9e-2a050a0adf18",
+      "fixture_path": "fixtures/legitimate/pair_036_slow_drift_combined_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "65052f8d-d562-4462-a5f7-a329616b3fff",
+      "fixture_path": "fixtures/drift/pair_037_slow_drift_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.12000112000112001 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "489b69f5-b27e-48fd-9cf2-90c6d893d0d0",
+      "fixture_path": "fixtures/legitimate/pair_037_slow_drift_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.12000112000112001 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "077f979e-2627-48d2-87bb-77b7dd6f78ee",
+      "fixture_path": "fixtures/drift/pair_041_slow_drift_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.24999961111102473>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "283a9fce-9514-47a2-afc5-77045a647fb4",
+      "fixture_path": "fixtures/legitimate/pair_041_slow_drift_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.24999961111102473>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "bf603ca1-7f37-4a2b-95e6-aec8ccc6607d",
+      "fixture_path": "fixtures/drift/pair_042_slow_drift_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "b3df8c6a-76bc-473c-b5b0-dedc1260c550",
+      "fixture_path": "fixtures/legitimate/pair_042_slow_drift_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "e66677d7-62be-4a5e-9ce5-7dc4b9cff1c6",
+      "fixture_path": "fixtures/drift/pair_043_slow_drift_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.14999713636623965 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "c90b02a9-c792-4552-a468-4f8f2c0b2e96",
+      "fixture_path": "fixtures/legitimate/pair_043_slow_drift_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.14999713636623965 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "f17d4840-573b-4867-8743-e99241dd8da1",
+      "fixture_path": "fixtures/drift/pair_045_slow_drift_combined_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "a3bc409b-7f83-489e-8b26-5cc3e3e45a0b",
+      "fixture_path": "fixtures/legitimate/pair_045_slow_drift_combined_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "b47295ed-6a98-4a75-b689-3977e8808dc6",
+      "fixture_path": "fixtures/ambiguous/ambiguous_002_velocity_boundary_groceries.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "ff401c75-3f20-4112-b78b-22231836edd4",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "0f3f2b6d-bdbc-4879-a477-9142fc120773",
+      "fixture_path": "fixtures/ambiguous/ambiguous_003_category_shift_boundary_household_essentials.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "fd778524-ff46-4292-a257-744e939a2b30",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.05 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "b95718e5-b923-4d0e-a7af-29a646ba8ee3",
+      "fixture_path": "fixtures/ambiguous/ambiguous_010_velocity_boundary_bills.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "735be20f-82e6-4d91-b8c8-2d8b5494070e",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f20a8a2d-91da-4e3f-a27d-c0b54c14a449",
+      "fixture_path": "fixtures/ambiguous/ambiguous_013_category_shift_boundary_house_help.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.45 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    },
+    {
+      "case_id": "15c9eddd-b865-4a84-bb1c-1a267d9a891e",
+      "fixture_path": "fixtures/ambiguous/ambiguous_014_velocity_boundary_groceries.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "4c14663b-2f73-4e44-86c7-7505179eb9df",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "ef8eb886-d126-4bc4-8364-cc20aa40554c",
+      "fixture_path": "fixtures/ambiguous/ambiguous_015_category_shift_boundary_household_essentials.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "c8df23bc-b0bf-4be9-b9b1-315f2b85a391",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.05 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f5998fdc-05ba-400a-8660-3a46e1283a96",
+      "fixture_path": "fixtures/ambiguous/ambiguous_017_category_shift_boundary_telephone.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.2 (need >=0.05)"
+      },
+      "pipeline_error": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""
+    }
+  ]
+}

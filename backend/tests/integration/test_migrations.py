@@ -6,6 +6,7 @@ checkpoint. Restores the schema to head in a `finally` block so a failed asserti
 leave the database mid-downgrade for every other integration test in the run.
 """
 
+import pytest
 import sqlalchemy as sa
 from alembic import command
 
@@ -47,6 +48,7 @@ def _enum_types(engine) -> set[str]:
     return {row[0] for row in rows}
 
 
+@pytest.mark.migration_roundtrip
 def test_full_downgrade_then_upgrade_round_trip(engine, alembic_config):
     assert DOMAIN_TABLES.issubset(_tables(engine)), "schema must start at head (autouse fixture)"
 

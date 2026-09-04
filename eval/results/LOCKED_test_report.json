@@ -1,0 +1,2053 @@
+{
+  "run_kind": "LOCKED_TEST_SET -- Checkpoint C13 / Milestone M8 -- one-time, non-repeatable",
+  "run_date": "2026-09-04",
+  "n_cases": 66,
+  "threshold_t": 0.05,
+  "prompt_version": "v1",
+  "primary_metrics": {
+    "fast_spike": {
+      "rules_only": {
+        "tp": 6,
+        "fp": 6,
+        "fn": 8,
+        "tn": 8,
+        "precision": 0.5,
+        "recall": 0.42857142857142855,
+        "f1": 0.4615384615384615,
+        "fpr": 0.42857142857142855,
+        "fnr": 0.5714285714285714
+      },
+      "hybrid": {
+        "tp": 14,
+        "fp": 14,
+        "fn": 0,
+        "tn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6666666666666666,
+        "fpr": 1.0,
+        "fnr": 0.0
+      }
+    },
+    "slow_drift": {
+      "rules_only": {
+        "tp": 5,
+        "fp": 5,
+        "fn": 9,
+        "tn": 9,
+        "precision": 0.5,
+        "recall": 0.35714285714285715,
+        "f1": 0.41666666666666663,
+        "fpr": 0.35714285714285715,
+        "fnr": 0.6428571428571429
+      },
+      "hybrid": {
+        "tp": 12,
+        "fp": 13,
+        "fn": 2,
+        "tn": 1,
+        "precision": 0.48,
+        "recall": 0.8571428571428571,
+        "f1": 0.6153846153846153,
+        "fpr": 0.9285714285714286,
+        "fnr": 0.14285714285714285
+      }
+    }
+  },
+  "drift_cases_caught_only_by_hybrid": 15,
+  "abstention_metrics": {
+    "n_ambiguous": 10,
+    "correct_abstention_rate": 0.2,
+    "overconfidence_on_ambiguous_rate": 0.2,
+    "n_legitimate": 28,
+    "unnecessary_hold_rate": 0.9642857142857143
+  },
+  "gate_rule_violation_count": 0,
+  "audit_completeness": {
+    "total": 66,
+    "complete": 66,
+    "rate": 1.0
+  },
+  "reliability_metrics": {
+    "llm_calls": 60,
+    "llm_status_counts": {
+      "success": 60
+    },
+    "schema_validation_pass_rate": 1.0,
+    "timeout_rate": 0.0,
+    "pipeline_error_rate": 0.0,
+    "pipeline_error_count": 0
+  },
+  "gate_decision_distribution": {
+    "allow": 0.07575757575757576,
+    "hold": 0.8333333333333334,
+    "none": 0.09090909090909091
+  },
+  "decision15_single_signal_legitimate_clearance": {
+    "n_subset": 7,
+    "n_cleared": 1,
+    "cleared_case_ids": [
+      "0eedabac-7201-4d5e-ab9c-eefe59a63ec0"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "072ebf24-bd3c-4993-96d2-e8fb9904d0ee",
+      "fixture_path": "fixtures/drift/pair_004_fast_spike_combined_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "2d2df3dc-0d09-4cea-92eb-293f88e299c2",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "d4229377-5475-46a5-8899-28d5b0eef601",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.82,
+        "latency_ms": 5155,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "edec4790-9bc8-490d-b3ec-23330078df0d",
+      "fixture_path": "fixtures/legitimate/pair_004_fast_spike_combined_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "79caa2b9-f549-48a5-a97a-30a4ede5fdb6",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "e8f11c3d-9ec7-4e3f-bef3-497202d92553",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 5601,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "56b55e89-a470-46bb-ab29-47cae198531d",
+      "fixture_path": "fixtures/drift/pair_005_fast_spike_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "800c8ba7-4583-4fc7-9535-abe7844c82f5",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "4bdd62f7-ebec-40d6-8ffa-a5d55748435f",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.82,
+        "latency_ms": 4162,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999984444440986>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "5efa6694-46b7-4a58-bf3e-90e015cc5be2",
+      "fixture_path": "fixtures/legitimate/pair_005_fast_spike_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "0db8e6be-a4ed-4ee5-9a3b-8b472e22e3af",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "79fda211-1715-443a-9b8c-ecf32178585c",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5188,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999984444440986>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "e5b4d24e-bd92-482f-bfb8-e54fdc0e55f4",
+      "fixture_path": "fixtures/legitimate/pair_006_fast_spike_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "4141f00e-0a2b-4b82-b9ce-d41302cc005c",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "26368f52-f596-4860-bf53-2518c16011dd",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5516,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "86d578ef-05e6-4b2e-95ae-a6743648c355",
+      "fixture_path": "fixtures/drift/pair_006_fast_spike_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "19c78a40-7286-4b5f-893e-30469a6e46ed",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "fe82230e-f242-4bc1-99df-d153a111b23f",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 5992,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "e1f1fd64-a4c7-4fed-9c62-a1e0fc9a13b6",
+      "fixture_path": "fixtures/drift/pair_007_fast_spike_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "aef46782-9343-46e8-958e-aa2919734c8d",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "e200ffcb-f6e9-4cbe-9d73-72b6daa0bca7",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 6389,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "5da79026-e1d3-4d51-9706-aca08bab6846",
+      "fixture_path": "fixtures/legitimate/pair_007_fast_spike_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "8386d3d5-1d7e-4c6a-b526-9e083c572d78",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "a998ceea-ff6c-4a03-bb0d-013dbe2c7d27",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5535,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "287c4561-f2c1-47c5-bc30-b7cfaf0b5b0b",
+      "fixture_path": "fixtures/drift/pair_010_fast_spike_combined_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "9e855d32-7a2c-4ef2-953a-399cf535e338",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "c8bd9a93-afaf-4953-af84-61f8a551b4ce",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 5801,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.1>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "20980d12-346c-4a4c-9207-d86f150cfe8d",
+      "fixture_path": "fixtures/legitimate/pair_010_fast_spike_combined_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "e38a4b9a-c776-4a2c-9ce4-43ae8e6360b6",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "f0197353-5961-4fc5-a650-aecbe242e8b1",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5068,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.1>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "73fe6a24-d5d3-4ca4-b91a-4c436cb3492e",
+      "fixture_path": "fixtures/drift/pair_011_fast_spike_single_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "c5084cf5-c4c0-428a-8be0-a98caa2e9f00",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "f363b8d7-89d3-4a74-8104-4eb976bbd98f",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 6781,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "786e0123-5a65-4df1-9ff6-d04e32a95029",
+      "fixture_path": "fixtures/legitimate/pair_011_fast_spike_single_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "dd903719-ffae-4457-9b1a-6efbdded15c3",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "460cdc08-fd8d-414a-9596-17b2cf542e68",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 5347,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c3b6842f-b44d-4cab-9f7a-627401f8de02",
+      "fixture_path": "fixtures/drift/pair_012_fast_spike_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "54a2401d-f408-4ff3-aec0-39d1a9ae2200",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "fa1bc0ba-4e74-485b-a88e-180e01a9f73b",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.8,
+        "latency_ms": 5472,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "deb9bc86-79fa-4d0d-821f-ee1b8412c0e0",
+      "fixture_path": "fixtures/legitimate/pair_012_fast_spike_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "f2ebeb27-d177-491a-8a4a-c7d7282feecd",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "a287d191-745a-483e-b078-aa704f1fe7b8",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5504,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "3283faf7-88a6-49cf-9982-6b9030362bda",
+      "fixture_path": "fixtures/drift/pair_014_fast_spike_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "0a3a0294-42b2-472b-9ff8-f68814243654",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "38b93f2b-4b05-4d07-add0-d0bdf2196727",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4945,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.34999991898150024>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "929fbd86-83f8-4077-aedb-1d4d0e0661c0",
+      "fixture_path": "fixtures/legitimate/pair_014_fast_spike_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "7dba9aaa-8912-4e2f-8e91-3f715786e6d7",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "d56a4d57-ae95-4c11-a863-0e8967e9612b",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4192,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.34999991898150024>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "1fb085bb-013f-484b-9446-29c1981ab035",
+      "fixture_path": "fixtures/drift/pair_020_fast_spike_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "d5c67b02-74ff-4975-91e6-8d3c26b3f6b5",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "7a3d9557-f166-43fc-8652-37f995623432",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 6386,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.25000040509249877>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "6cee1fa6-434b-4f04-b66b-54e75aa914a2",
+      "fixture_path": "fixtures/drift/pair_015_fast_spike_combined_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "59cab358-8a9e-49fa-bdfa-e5a21634bd74",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "87683596-f03f-4550-859d-5defbc0e66cf",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.88,
+        "latency_ms": 4967,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.600000197368486>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "fb766018-3ad2-42ad-a0f7-beaed240cf44",
+      "fixture_path": "fixtures/legitimate/pair_015_fast_spike_combined_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "9935d6a3-1dee-45bc-82ee-29518e248dc4",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "0d6072dd-dcc1-48ea-9623-f803f6e3e33e",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.9,
+        "latency_ms": 4853,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.600000197368486>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c1ada1db-7dc7-41a5-844c-46b392a85082",
+      "fixture_path": "fixtures/drift/pair_016_fast_spike_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "0feea100-3885-48e0-9d95-037a1a82ca02",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "ca33283c-1661-4fb1-a24f-722ab837a1d3",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.7,
+        "latency_ms": 5982,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "43c758d3-a5c7-48eb-ba0b-24a4f1d97af4",
+      "fixture_path": "fixtures/legitimate/pair_016_fast_spike_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "80c6485d-01cf-42e2-8257-013e81d86262",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "2b9ef157-f498-4faf-9811-91bdc31dbdf4",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.7,
+        "latency_ms": 4900,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "904db204-3fb6-4777-8048-b3c91ff5095f",
+      "fixture_path": "fixtures/drift/pair_026_slow_drift_combined_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "92104753-0309-4643-be92-bf6411805915",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "4acdb9c9-d1c2-4f2e-a90c-5c545c0ee961",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5314,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999929999930003>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "7f9bc95a-5916-4355-8242-af0a5e5e249d",
+      "fixture_path": "fixtures/ambiguous/ambiguous_004_velocity_boundary_bills.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "d90799ae-1dc4-4f56-afb1-01ee3764034e",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "adb5348e-66a0-476a-b0f5-f7d4ed214d32",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5458,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "ab6dfedb-1dea-41bd-9a46-712a1a4dbd21",
+      "fixture_path": "fixtures/legitimate/pair_020_fast_spike_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "c7da4b8e-3e02-464b-be84-9c9689517268",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "2f154a54-bfc1-45b4-a4a4-6a95405c394d",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.82,
+        "latency_ms": 5450,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.25000040509249877>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "4c17450b-0549-4650-8381-b7b180907cf2",
+      "fixture_path": "fixtures/drift/pair_021_fast_spike_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "de99a916-af30-4c6f-9485-b60e285a0658",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "de139b48-ee5b-42d2-bd44-7e5b5c80496c",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 4977,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c83bccd7-8173-497c-be1a-c12a932f2828",
+      "fixture_path": "fixtures/legitimate/pair_021_fast_spike_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "dddf6434-38c3-4bb6-ab60-c8de48b7056a",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "99c066eb-99de-46b8-81a9-66063c257c98",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 4919,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c35d1857-5855-431a-be3f-6186bee8e6ee",
+      "fixture_path": "fixtures/drift/pair_022_fast_spike_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "fee2cb5d-b11b-458a-bd34-06d4617b66e3",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "5b17d8c3-c527-471b-9e19-c14f6ccaf8f4",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5379,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c431c901-50c1-42ec-9751-e0cc7b9eaf16",
+      "fixture_path": "fixtures/legitimate/pair_022_fast_spike_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "45288aa2-75b3-4a66-b3c0-6897a9524107",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "d839ac0c-51f3-4278-b649-4cb020bd007a",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 5425,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=elevated (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "65d76498-3193-4b75-a4aa-678f3466dfed",
+      "fixture_path": "fixtures/drift/pair_024_fast_spike_combined_bills_drift.json",
+      "category": "drift",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "3b45b1ac-02fa-41a6-a5c5-9cdd49910055",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "0d3b1947-5a80-46e4-89c1-e5343bbb6b1f",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.9,
+        "latency_ms": 5995,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6000002343750915>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "9b25841d-731b-4837-9cbd-2110203508ab",
+      "fixture_path": "fixtures/legitimate/pair_024_fast_spike_combined_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "fast_spike",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "b5122719-c1e4-4b5c-b25f-212926a8c2d7",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "1dbbfd22-761a-4aac-a72b-9263b19813cf",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.9,
+        "latency_ms": 4593,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6000002343750915>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "68a645bb-4755-4695-abde-04cba2174e3b",
+      "fixture_path": "fixtures/drift/pair_025_slow_drift_combined_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "7deefafe-e89b-490b-b342-4f8b12eca06f",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "eea496fc-dd80-48ad-8a8e-bd6395c5d9d7",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 4899,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08000038181783471 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "7f3484ae-ca4b-4508-ad76-12f23970db56",
+      "fixture_path": "fixtures/legitimate/pair_025_slow_drift_combined_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "96f2a553-d1c9-4c8f-804e-93adf7723f83",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "caf85027-09e7-4444-b9d1-5e67db02a661",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 5161,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.08000038181783471 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "fa916293-8f6c-404a-a9b6-6314ac73ad8b",
+      "fixture_path": "fixtures/ambiguous/ambiguous_005_category_shift_boundary_telephone.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "1d517fa2-fb02-4ba5-b54a-491903d051ea",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "allow",
+        "case_id_db": null,
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 3647,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.2 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c095adee-f71c-419e-a812-1154aadc3a1b",
+      "fixture_path": "fixtures/legitimate/pair_026_slow_drift_combined_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "8845a928-8b1c-4028-8657-a231b90fcd5d",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "82884b21-a499-427a-94c1-cad76432ee2a",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4483,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.29999929999930003>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c60fbaa5-5574-4a7a-b9cc-1a7d130f05b2",
+      "fixture_path": "fixtures/drift/pair_027_slow_drift_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "540ba060-a49a-4fb2-bd07-16824919a2e4",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "c7acf27c-a114-4bbd-b9a8-e158ad325f56",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.82,
+        "latency_ms": 4691,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "02fec268-1638-437b-a6da-5c45a6497082",
+      "fixture_path": "fixtures/legitimate/pair_027_slow_drift_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "1c05c5bb-547b-4c68-94b4-de7d7aec0c0d",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "1e8d5786-1606-4924-856f-f7e450559d02",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.83,
+        "latency_ms": 4224,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "a6851c13-f4a1-4d83-948a-99f4df0bcc0e",
+      "fixture_path": "fixtures/drift/pair_028_slow_drift_single_groceries_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "d0a47a22-f3bc-49b3-b6a3-382d79a7abd0",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "65418724-4da8-4667-9ae4-11d569988530",
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 5471,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.15000055681856148 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "0eedabac-7201-4d5e-ab9c-eefe59a63ec0",
+      "fixture_path": "fixtures/legitimate/pair_028_slow_drift_single_groceries_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "1a429a7c-316d-41f2-8bcd-f281c50c14fc",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "allow",
+        "case_id_db": null,
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 4796,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.15000055681856148 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "1a83ba82-c9f4-4ffe-8214-723e4980a334",
+      "fixture_path": "fixtures/drift/pair_031_slow_drift_combined_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "055817a3-c0cc-433b-afd4-820e2a02bc82",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "8976467d-701d-4c5b-8048-5455bc81e451",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5076,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.1 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "01ebabe6-d773-4ad8-9617-5f1952f9c61b",
+      "fixture_path": "fixtures/legitimate/pair_031_slow_drift_combined_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "0844ffda-e4d0-4fdb-8271-fff90492955d",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "b3241630-fbd7-4404-9859-3cba00d0eb0c",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "medium",
+        "confidence": 0.78,
+        "latency_ms": 5400,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=critical (need elevated), category_shift_ratio=0.1 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "666e5286-6fa5-4d6f-ab87-e3ceb5f73fca",
+      "fixture_path": "fixtures/ambiguous/ambiguous_006_velocity_boundary_fuel.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "becf026e-bf8f-4642-930a-eecd16ce8c98",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "8f5da46e-1425-416d-ab01-1fc963c8e021",
+      "fixture_path": "fixtures/drift/pair_032_slow_drift_single_fuel_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "5ccd57bc-db54-4619-a6e0-1161e93b47b6",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "60951e1e-c27e-4c41-b34d-21ed5fea3e2c",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.78,
+        "latency_ms": 4575,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.4000014000014 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "ea9b4d9f-f069-444a-92a7-de93e270f2f9",
+      "fixture_path": "fixtures/legitimate/pair_032_slow_drift_single_fuel_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "e3c9ff15-7419-4536-a253-c2929448936e",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "a52848eb-418f-4440-80b1-d6a7aaec2180",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "low",
+        "confidence": 0.75,
+        "latency_ms": 5643,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.4000014000014 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "78336a05-4853-45ff-a720-f3791ff51d90",
+      "fixture_path": "fixtures/drift/pair_033_slow_drift_single_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "429ebea7-43e0-4c66-9255-aa5a3e931259",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "b597078f-4ef9-4f45-b27c-98d23b7af4f9",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.82,
+        "latency_ms": 5720,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.5999991515159228 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "dce7d412-639a-45af-b04c-1c5e8efdcb88",
+      "fixture_path": "fixtures/legitimate/pair_033_slow_drift_single_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "4bceaf15-c788-412a-9fb8-90541f2ba217",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "f3f84605-1c8c-4361-98fd-60342e56759f",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4880,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.5999991515159228 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "2469797e-9c19-48ae-8267-54caa32ce86e",
+      "fixture_path": "fixtures/drift/pair_035_slow_drift_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "364c9f96-dd67-463c-8fd5-c2194686d1fd",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "44887338-9fc8-4dd4-a112-0a1eac3610d4",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5357,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.350000077777795>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f7faad4d-e611-4e96-8b69-8966470940dd",
+      "fixture_path": "fixtures/legitimate/pair_035_slow_drift_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "5c0b6417-3bb8-416d-afa7-e3f2ccd5605e",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "2f91bfe2-0c43-439d-a132-f361b7ad8556",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4904,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.350000077777795>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "07704936-1440-4f1b-88ec-d8ca4c1b153b",
+      "fixture_path": "fixtures/drift/pair_036_slow_drift_combined_bills_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "bd0c4ee4-6b06-4695-87a6-f166fb129f95",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "75490ff5-2405-49e8-be6f-3b6ff218d463",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.9,
+        "latency_ms": 4656,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "8e671443-1f38-4522-bd9e-2a050a0adf18",
+      "fixture_path": "fixtures/legitimate/pair_036_slow_drift_combined_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "8a437943-45bd-4bfe-8e8a-687c7b92997d",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "98341028-d29d-4a8a-b457-00dea77b7a8a",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.88,
+        "latency_ms": 3768,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "65052f8d-d562-4462-a5f7-a329616b3fff",
+      "fixture_path": "fixtures/drift/pair_037_slow_drift_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "f4e18100-ba04-4c28-8943-48db3ed62118",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "allow",
+        "case_id_db": null,
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 4869,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.12000112000112001 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "489b69f5-b27e-48fd-9cf2-90c6d893d0d0",
+      "fixture_path": "fixtures/legitimate/pair_037_slow_drift_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "d1584b71-3756-4117-9aa1-4d6f8a00844e",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "d5cc1115-26ce-4e69-82a3-bc587e214bd9",
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 4573,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.12000112000112001 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "077f979e-2627-48d2-87bb-77b7dd6f78ee",
+      "fixture_path": "fixtures/drift/pair_041_slow_drift_combined_household_essentials_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "1ffe0350-b8a5-4b44-a70e-254b8e410d1b",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "721a5ce9-96aa-4308-b1aa-b1b397647da5",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5242,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.24999961111102473>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "283a9fce-9514-47a2-afc5-77045a647fb4",
+      "fixture_path": "fixtures/legitimate/pair_041_slow_drift_combined_household_essentials_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "afa32588-75d2-47ff-b9fd-db093caa79bb",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "78fa56b4-e66f-411f-a61f-bc4702940621",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5372,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.24999961111102473>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "bf603ca1-7f37-4a2b-95e6-aec8ccc6607d",
+      "fixture_path": "fixtures/drift/pair_042_slow_drift_single_bills_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "9a2b3efe-1411-4602-bbeb-b28d1cd42532",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "dba51ba8-2a65-4c57-91b6-13d3257c49e0",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5526,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "b3df8c6a-76bc-473c-b5b0-dedc1260c550",
+      "fixture_path": "fixtures/legitimate/pair_042_slow_drift_single_bills_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "33097828-7071-4f65-96fb-0843d7b907dc",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "ed15a6a4-e60c-4e11-a7db-5ec29325f517",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 4410,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.6000009333342667 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "e66677d7-62be-4a5e-9ce5-7dc4b9cff1c6",
+      "fixture_path": "fixtures/drift/pair_043_slow_drift_single_telephone_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "21068ab0-c673-40ac-ba0a-de8925c23659",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "allow",
+        "case_id_db": null,
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.75,
+        "latency_ms": 5390,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.14999713636623965 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "c90b02a9-c792-4552-a468-4f8f2c0b2e96",
+      "fixture_path": "fixtures/legitimate/pair_043_slow_drift_single_telephone_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "d7da8dba-c9d2-455a-ae83-f1565b062c3b",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "6a2275ed-4640-40dd-9399-3b99a69442e7",
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.7,
+        "latency_ms": 4874,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.14999713636623965 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f17d4840-573b-4867-8743-e99241dd8da1",
+      "fixture_path": "fixtures/drift/pair_045_slow_drift_combined_house_help_drift.json",
+      "category": "drift",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "drift",
+      "hybrid": {
+        "transaction_id": "ef6ce78f-8812-4fb7-b0ba-d043388d0254",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "6a340edc-92cf-4043-8b58-9e94cbca4fcb",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.87,
+        "latency_ms": 4977,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "a3bc409b-7f83-489e-8b26-5cc3e3e45a0b",
+      "fixture_path": "fixtures/legitimate/pair_045_slow_drift_combined_house_help_legit.json",
+      "category": "legitimate",
+      "drift_type": "slow_drift",
+      "ground_truth_label": "legitimate",
+      "hybrid": {
+        "transaction_id": "745ab5c9-4350-425d-9e38-439b85713cea",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "spend_velocity",
+          "category_shift",
+          "clustering"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "0658f650-f42f-4d56-b9e7-5ebc2d6b2382",
+        "llm_status": "success",
+        "risk_level": "high",
+        "mandate_alignment": "low",
+        "confidence": 0.85,
+        "latency_ms": 5595,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "hold",
+        "rule_applied": "hold: velocity=elevated AND category_shift_ratio=0.6>=0.05"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "b47295ed-6a98-4a75-b689-3977e8808dc6",
+      "fixture_path": "fixtures/ambiguous/ambiguous_002_velocity_boundary_groceries.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "65cf899f-1d7e-4c5b-a058-4202a879e40b",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "0f3f2b6d-bdbc-4879-a477-9142fc120773",
+      "fixture_path": "fixtures/ambiguous/ambiguous_003_category_shift_boundary_household_essentials.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "591931ef-2ab3-444d-a2ee-956befb711fa",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.05 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "b95718e5-b923-4d0e-a7af-29a646ba8ee3",
+      "fixture_path": "fixtures/ambiguous/ambiguous_010_velocity_boundary_bills.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "fe649631-2930-48ee-86ce-42cff2a72fcd",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f20a8a2d-91da-4e3f-a27d-c0b54c14a449",
+      "fixture_path": "fixtures/ambiguous/ambiguous_013_category_shift_boundary_house_help.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "cfc3c01b-f634-468c-8a1a-dfa13f662fd6",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "hold",
+        "case_id_db": "68fa9725-a95b-4a93-872b-f9a03b740177",
+        "llm_status": "success",
+        "risk_level": "medium",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 4572,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.45 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "15c9eddd-b865-4a84-bb1c-1a267d9a891e",
+      "fixture_path": "fixtures/ambiguous/ambiguous_014_velocity_boundary_groceries.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "448e25e3-b492-4cde-a914-6aea3c34d35b",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.0 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "ef8eb886-d126-4bc4-8364-cc20aa40554c",
+      "fixture_path": "fixtures/ambiguous/ambiguous_015_category_shift_boundary_household_essentials.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "5dc4449d-e5f2-4414-aa4b-37ea52859323",
+        "threshold_crossed": false,
+        "triggering_signals": [],
+        "gate_decision": null,
+        "case_id_db": null,
+        "llm_status": null,
+        "risk_level": null,
+        "mandate_alignment": null,
+        "confidence": null,
+        "latency_ms": null,
+        "audit_event_present": true,
+        "gate_decision_row_present": null,
+        "evidence_packet_present": null
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.05 (need >=0.05)"
+      },
+      "pipeline_error": null
+    },
+    {
+      "case_id": "f5998fdc-05ba-400a-8660-3a46e1283a96",
+      "fixture_path": "fixtures/ambiguous/ambiguous_017_category_shift_boundary_telephone.json",
+      "category": "ambiguous",
+      "drift_type": "n_a",
+      "ground_truth_label": "abstain_expected",
+      "hybrid": {
+        "transaction_id": "adb6168c-38cc-48b7-8a07-7a25443fa1df",
+        "threshold_crossed": true,
+        "triggering_signals": [
+          "category_shift"
+        ],
+        "gate_decision": "allow",
+        "case_id_db": null,
+        "llm_status": "success",
+        "risk_level": "low",
+        "mandate_alignment": "medium",
+        "confidence": 0.72,
+        "latency_ms": 4434,
+        "audit_event_present": true,
+        "gate_decision_row_present": true,
+        "evidence_packet_present": true
+      },
+      "rules_only": {
+        "gate_decision": "allow",
+        "rule_applied": "allow: velocity=normal (need elevated), category_shift_ratio=0.2 (need >=0.05)"
+      },
+      "pipeline_error": null
+    }
+  ]
+}
