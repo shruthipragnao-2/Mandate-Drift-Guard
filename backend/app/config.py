@@ -136,6 +136,27 @@ class GatePolicyConfig(BaseModel):
 GATE_POLICY_CONFIG = GatePolicyConfig()
 
 
+class IngestionConfig(BaseModel):
+    """Versioned config for ingestion-boundary input validation (red-team Category 1,
+    2026-09-04), mirroring the `EvidenceEngineThresholds`/`GatePolicyConfig` pattern rather
+    than hardcoding a constant inside the API module.
+    """
+
+    version: str = "v1"
+
+    # Red-team finding RT-C1-001: `occurred_at` is attacker-controlled and feeds
+    # compute_velocity's `as_of = max(t.occurred_at ...)`, which sets
+    # `expected_fraction = days_elapsed / period_days`. A future-dated transaction inflates
+    # expected_fraction without bound, driving the velocity ratio toward zero and reading
+    # "normal" no matter how large the spend -- a silent ALLOW. Transactions are reports of
+    # spend that has ALREADY happened, so anything beyond a small clock-skew allowance is
+    # refused. Deliberately small: this is skew tolerance, not a business window.
+    max_future_skew_minutes: float = 5.0
+
+
+INGESTION_CONFIG = IngestionConfig()
+
+
 class HoldResolutionConfig(BaseModel):
     """Versioned config for HOLD-timeout handling (Checkpoint C11). Read by
     `app.domain.pipeline.check_and_apply_timeout` as a `config` keyword argument, mirroring

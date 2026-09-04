@@ -206,3 +206,51 @@ def test_offset_aware_occurred_at_is_accepted(api_client, make_mandate):
     )
 
     assert response.status_code == 200
+
+
+def test_future_dated_occurred_at_is_rejected(api_client, make_mandate):
+    """RT-C1-001, the highest-severity red-team finding. Future-dating inflated
+    compute_velocity's expected_fraction without bound, collapsing the velocity ratio toward
+    zero so a large in-mandate spend read "normal" on all three signals, never crossed the
+    threshold, and took the nominal-ALLOW path -- a silent ALLOW with no LLM call, no
+    evidence packet and no case. Refused at the ingestion boundary now."""
+    mandate = make_mandate()
+
+    response = api_client.post(
+        "/transactions",
+        json={
+            "mandate_id": str(mandate.id),
+            "merchant": "Big Bazaar",
+            "category": "groceries",
+            "amount": 7500,
+            "occurred_at": "2027-09-04T10:00:00Z",
+            "idempotency_key": "idem-future-ts",
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 400
+
+
+def test_recent_past_occurred_at_still_accepted(api_client, make_mandate):
+    """The bound must not reject ordinary backdated reporting -- transactions legitimately
+    arrive describing spend from earlier. Only the future is refused."""
+    from datetime import datetime, timedelta, timezone
+
+    mandate = make_mandate()
+    past = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+
+    response = api_client.post(
+        "/transactions",
+        json={
+            "mandate_id": str(mandate.id),
+            "merchant": "Kirana",
+            "category": "groceries",
+            "amount": 50,
+            "occurred_at": past,
+            "idempotency_key": "idem-past-ts",
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200

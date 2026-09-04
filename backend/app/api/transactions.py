@@ -17,7 +17,7 @@ returns the already-computed prior result without re-running the pipeline; the s
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.auth import require_bearer_token
+from app.config import INGESTION_CONFIG
 from app.db import models
 from app.db.session import get_db
 from app.domain.pipeline import IncomingTransaction, run_pipeline
@@ -60,6 +61,40 @@ class TransactionCreateRequest(BaseModel):
             raise ValueError(
                 "occurred_at must include an explicit timezone offset "
                 '(e.g. "2026-09-02T10:00:00Z" or "2026-09-02T10:00:00+05:30")'
+            )
+        return value
+
+    @field_validator("occurred_at")
+    @classmethod
+    def _reject_future_timestamps(cls, value: datetime) -> datetime:
+        """Red-team finding RT-C1-001, the highest-severity one found: `occurred_at` is
+        attacker-controlled and feeds compute_velocity's `as_of = max(t.occurred_at ...)`,
+        which sets `expected_fraction = days_elapsed / period_days`. Future-dating a
+        transaction inflates expected_fraction without bound, so
+        `ratio = actual_fraction / expected_fraction` collapses toward zero and the velocity
+        band reads "normal" regardless of how large the spend is. For an in-mandate category
+        (category_shift "none") on an unclustered day, ALL THREE signals then read benign,
+        the threshold is never crossed, and the transaction takes the nominal-ALLOW path:
+        no LLM call, no evidence packet, no case, no review. A silent ALLOW -- exactly what
+        baseline §6's fail-closed invariant forbids. Confirmed live: an identical 7500-rupee
+        spend on an 8000/7-day mandate HELD with an honest timestamp and was ALLOWED when
+        dated a year ahead.
+
+        Fixed here, at the ingestion boundary, rather than in the evidence engine, for two
+        reasons. First, the engine is a pure function by design and takes no clock; injecting
+        wall-clock into it would make signal computation non-deterministic and break the
+        reproducibility the eval harness and the locked C13 test-set numbers depend on.
+        Second, the engine's unbounded `expected_fraction` growth is the *known* period-
+        renewal gap already flagged [OPEN] in baseline §18 and deliberately scoped out by
+        Decision 16 -- not something to resolve unilaterally here. What was genuinely
+        unguarded, and is genuinely this checkpoint's to close, is that the live API accepted
+        arbitrary timestamps at all.
+        """
+        skew = timedelta(minutes=INGESTION_CONFIG.max_future_skew_minutes)
+        if value > datetime.now(timezone.utc) + skew:
+            raise ValueError(
+                "occurred_at is in the future; a transaction reports spend that has already "
+                f"happened (clock-skew allowance: {INGESTION_CONFIG.max_future_skew_minutes} minutes)"
             )
         return value
 
