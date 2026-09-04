@@ -23,6 +23,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.auth import require_bearer_token
@@ -218,7 +219,38 @@ def create_transaction(
         idempotency_key=request.idempotency_key,
     )
 
-    result = run_pipeline(db, mandate, historical, incoming)
+    try:
+        result = run_pipeline(db, mandate, historical, incoming)
+    except IntegrityError:
+        # Red-team finding RT-C1-009. The `existing` lookup above and this insert are not one
+        # atomic operation, so two concurrent requests carrying the same idempotency key can
+        # both read "no existing row" and both proceed. The loser hits
+        # `uq_transactions_mandate_id_idempotency_key` and used to surface as HTTP 500 --
+        # measured at 3 of 4 concurrent requests. Data integrity was never at risk (exactly
+        # one transaction and one case were written either way, so Decision 8's idempotency
+        # guarantee held); only the reporting was wrong, which is why this was MODERATE and
+        # not a fail-closed violation.
+        #
+        # Losing the race means the winner has already persisted the identical request, so
+        # the correct answer is the replay this endpoint would have returned had the race
+        # gone the other way -- the same path a serial duplicate takes above.
+        db.rollback()
+        raced = (
+            db.query(models.Transaction)
+            .filter_by(mandate_id=mandate.id, idempotency_key=request.idempotency_key)
+            .first()
+        )
+        if raced is None:
+            # Not the idempotency collision -- some other constraint failed, and quietly
+            # reporting success for it would be exactly the kind of silent repair this
+            # project refuses. Let it propagate.
+            raise
+        if not _same_payload(raced, request):
+            raise HTTPException(
+                status_code=409,
+                detail="idempotency_key already used for this mandate with a different payload",
+            ) from None
+        return _response_for_existing(db, raced)
 
     return TransactionCreateResponse(
         transaction_id=result.transaction_id,

@@ -35,7 +35,7 @@ never to silent ALLOW"*. Only one of the findings below was a true fail-open.
 | RT-C1-006 | NUL byte in merchant/category crashed | CRITICAL | Fixed `171ce63` |
 | RT-C1-007 | The validation-error handler itself crashed on non-serializable input | CRITICAL | Fixed `171ce63` |
 | RT-C1-008 | **No fail-closed exception boundary exists at all** | CRITICAL | **OPEN — needs human decision** |
-| RT-C1-009 | Concurrent same-key crossing requests → 500 instead of idempotent replay | MODERATE | Open |
+| RT-C1-009 | Concurrent same-key crossing requests → 500 instead of idempotent replay | MODERATE | Fixed `PENDING` |
 | RT-C1-010 | No length cap on `merchant` / `category` | COSMETIC | Open |
 
 ---
@@ -210,7 +210,7 @@ for the next session.
 
 ---
 
-### RT-C1-009 — Concurrent same-key submissions return 500 — MODERATE — open
+### RT-C1-009 — Concurrent same-key submissions return 500 — MODERATE — FIXED
 
 Four concurrent identical threshold-crossing requests sharing one idempotency key:
 
@@ -230,8 +230,25 @@ retries after the 500 gets the correct `held` result.
 The non-crossing equivalent (6 concurrent, no case opened) returned **200 six times with
 exactly 1 row persisted** — correct.
 
-Fix would be to catch `IntegrityError` and re-read the existing row, i.e. treat the race as
-the idempotent replay it actually is.
+**Fix:** `IntegrityError` is now caught around `run_pipeline`; the session is rolled back and
+the key re-read. If a row is now present the race was lost, and the request returns the same
+replay a serial duplicate gets — because the winner has already persisted the identical
+request. If **no** matching row is found, the error was some *other* constraint failure and is
+re-raised rather than masked: quietly reporting success for an unrelated integrity error would
+be exactly the silent repair this project refuses elsewhere. Both directions are pinned by
+tests, the race simulated deterministically rather than with threads.
+
+Re-verified live with the same 4-way concurrent probe that produced the 3×500:
+
+```
+#1..#4: HTTP 200, state=held, all four returning the SAME transaction id
+DB: transactions for key=1, cases=1
+```
+
+**Related observation, not fixed:** each racing request makes its own real Anthropic call
+before losing at commit, since `assess()` runs before persistence. Four concurrent duplicates
+cost four LLM calls to produce one case. Harmless to correctness and to the locked metrics,
+but it is real spend, and worth knowing before any load demo.
 
 ---
 

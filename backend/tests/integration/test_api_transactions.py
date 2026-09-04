@@ -298,3 +298,79 @@ def test_ordinary_unicode_merchant_is_still_accepted(api_client, make_mandate):
     )
 
     assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Regression (red-team Category 1): RT-C1-009, concurrent same-key submissions
+# ---------------------------------------------------------------------------
+
+
+def _raise_integrity_error(*args, **kwargs):
+    from sqlalchemy.exc import IntegrityError
+
+    raise IntegrityError("INSERT ...", {}, Exception("duplicate key value violates unique constraint"))
+
+
+def test_lost_idempotency_race_returns_the_winners_result_not_500(
+    api_client, make_mandate, make_transaction, db_session, monkeypatch
+):
+    """RT-C1-009. The `existing` lookup and the insert are not atomic, so concurrent requests
+    with the same key both see "no existing row" and both proceed; the loser hit
+    uq_transactions_mandate_id_idempotency_key and surfaced as HTTP 500 (measured live at 3 of
+    4 concurrent requests). Losing the race means the winner already persisted the identical
+    request, so the correct answer is the same replay a serial duplicate gets.
+
+    The race is simulated deterministically rather than with threads: the winner's row is
+    already present, and run_pipeline is forced to raise IntegrityError the way the losing
+    insert really does."""
+    mandate = make_mandate()
+    winner = make_transaction(
+        mandate=mandate, merchant="Kirana", category="groceries", amount=50,
+        idempotency_key="idem-raced", state="allowed",
+    )
+    db_session.commit()
+
+    import app.api.transactions as transactions_module
+
+    monkeypatch.setattr(transactions_module, "run_pipeline", _raise_integrity_error)
+
+    response = api_client.post(
+        "/transactions",
+        json={
+            "mandate_id": str(mandate.id), "merchant": "Kirana", "category": "groceries",
+            "amount": 50, "occurred_at": winner.occurred_at.isoformat(),
+            "idempotency_key": "idem-raced",
+        },
+        headers=AUTH,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["transaction_id"] == str(winner.id)
+
+
+def test_unrelated_integrity_error_is_not_masked_as_success(
+    api_client, make_mandate, monkeypatch
+):
+    """The race handler must not swallow every IntegrityError -- only the idempotency
+    collision, identified by a matching row actually existing afterwards. Any other
+    constraint failure must still propagate rather than being quietly reported as a
+    successful replay."""
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    mandate = make_mandate()
+
+    import app.api.transactions as transactions_module
+
+    monkeypatch.setattr(transactions_module, "run_pipeline", _raise_integrity_error)
+
+    with pytest.raises(IntegrityError):
+        api_client.post(
+            "/transactions",
+            json={
+                "mandate_id": str(mandate.id), "merchant": "Kirana", "category": "groceries",
+                "amount": 50, "occurred_at": "2026-09-02T10:00:00Z",
+                "idempotency_key": "idem-no-winner-row",
+            },
+            headers=AUTH,
+        )
