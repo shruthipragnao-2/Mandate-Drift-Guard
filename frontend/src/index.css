@@ -225,6 +225,30 @@ button {
   margin-top: 2px;
 }
 
+/* Red-team finding RT-C4-002 (the visible consequence of RT-C1-010: merchant and category
+   have no length cap, and a real merchant name legitimately contains no spaces). An unbroken
+   string has a min-content width equal to its full length, so a grid track sized `1fr` or
+   `auto` grows to fit it rather than wrapping -- which pushed the mandate-context card's other
+   two columns off-screen entirely and ran the merchant/category values past the right edge of
+   the viewport. Reproduced live at 1280px with a 432-character merchant.
+
+   `anywhere` rather than `break-word`: `break-word` still lets the element claim its
+   min-content width when computing the grid track, so the track blows out even though the
+   text later wraps. `anywhere` makes the break opportunities count during intrinsic sizing,
+   which is the half that actually keeps the layout inside the card.
+
+   Applied to the specific fields that carry unbounded server-supplied text, not globally --
+   `.case-row-action`'s `white-space: nowrap` and the badge row are deliberately left alone. */
+.mandate-context-value,
+.detail-grid > span,
+.case-table td,
+.rule-applied,
+.banner,
+.evidence-list li {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
 .timeline {
   list-style: none;
   margin: 0 0 24px;
