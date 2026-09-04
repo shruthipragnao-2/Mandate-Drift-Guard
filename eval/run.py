@@ -101,6 +101,12 @@ def _run_hybrid(session, case: CaseRecord) -> dict:
         "gate_decision": result.gate_decision,
         "case_id_db": str(result.case_id) if result.case_id else None,
         "llm_status": result.llm_status,
+        # Decision 20 (baseline §24): the exception type when run_pipeline's fail-closed
+        # backstop caught an otherwise-unhandled exception, else None. Recorded because such
+        # an exception no longer escapes run_pipeline for the `except` below to catch, and
+        # eval-design §16's pipeline-error rate would silently undercount without it --
+        # eval/report.py's `is_pipeline_error` reads this field.
+        "fail_closed_reason": result.fail_closed_reason,
         "risk_level": semantic_assessment.risk_level if semantic_assessment else None,
         "mandate_alignment": semantic_assessment.mandate_alignment if semantic_assessment else None,
         "confidence": float(semantic_assessment.confidence) if semantic_assessment else None,

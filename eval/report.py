@@ -128,7 +128,12 @@ def audit_completeness_rate(cases: list[dict]) -> dict:
     complete = 0
     for case in cases:
         hybrid = case["hybrid"]
-        if not hybrid or case.get("pipeline_error"):
+        # Same predicate as the error rate above, so one failed case cannot be an error by
+        # one metric and a complete audit record by the other. Note the deliberate asymmetry
+        # this preserves: a backstop case DOES now have an audit event (that is precisely what
+        # Decision 20 restored), but it is still counted as a pipeline error -- "we recorded
+        # why it failed" is not the same claim as "it did not fail".
+        if not hybrid or is_pipeline_error(case):
             total += 1
             continue
         total += 1
@@ -154,6 +159,35 @@ def drift_cases_caught_only_by_hybrid(cases: list[dict]) -> int:
     return count
 
 
+def is_pipeline_error(case: dict) -> bool:
+    """eval-design §16's pipeline-error predicate. Two sources, because Decision 20
+    (docs/IMPLEMENTATION-BASELINE.md §24) changed how a pipeline failure reaches the harness --
+    this is a metric-definition consistency fix, not a change to what counts as an error.
+
+    1. `pipeline_error` -- an exception the runner caught around `run_pipeline`. This was the
+       ONLY source before Decision 20.
+    2. `hybrid.fail_closed_reason` -- set when `run_pipeline`'s fail-closed backstop caught an
+       otherwise-unhandled exception and routed it to HOLD (RT-C1-008's fix). Such an exception
+       no longer escapes `run_pipeline`, so source 1 can no longer see it. Counting only source
+       1 from here on would report zero errors for runs in which the pipeline genuinely threw
+       -- an undercount that gets quieter the better the backstop works.
+
+    Both are the same underlying event: the pipeline hit something it did not anticipate. What
+    changed is that the system now fails closed and keeps an audit record instead of 500ing
+    with nothing persisted; the metric must keep counting it either way.
+
+    C13's locked test-set numbers are unaffected by this, and not merely "left alone": that run
+    recorded `pipeline_error_count: 0` with `llm_status_counts: {success: 60}` over 60 LLM
+    calls, i.e. zero exceptions were raised at all. Zero exceptions then means zero backstop
+    catches now -- both counts are a true zero over the same events, not a metric that quietly
+    changed meaning underneath a number that happened to stay 0. The locked run is NOT re-run
+    and its recorded results files are not rewritten; this predicate applies to future runs.
+    """
+    if case.get("pipeline_error"):
+        return True
+    return bool((case.get("hybrid") or {}).get("fail_closed_reason"))
+
+
 def reliability_metrics(cases: list[dict]) -> dict:
     """eval-design §16, the subset computable without a retry counter (not tracked by
     semantic_risk_client's return type -- Decision 14 makes retries transport-only and
@@ -161,7 +195,7 @@ def reliability_metrics(cases: list[dict]) -> dict:
     Also breaks out `llm_status` counts (success/timeout/malformed/transport_error) and a
     timeout rate specifically -- a single genuinely slow run can otherwise hide inside a
     pass-rate average."""
-    triggered = [c for c in cases if not c.get("pipeline_error") and (c["hybrid"] or {}).get("threshold_crossed")]
+    triggered = [c for c in cases if not is_pipeline_error(c) and (c["hybrid"] or {}).get("threshold_crossed")]
     llm_calls = len(triggered)
     status_counts: dict[str, int] = {}
     for c in triggered:
@@ -169,7 +203,7 @@ def reliability_metrics(cases: list[dict]) -> dict:
         status_counts[status] = status_counts.get(status, 0) + 1
     successes = status_counts.get("success", 0)
     timeouts = status_counts.get("timeout", 0)
-    errors = sum(1 for c in cases if c.get("pipeline_error"))
+    errors = sum(1 for c in cases if is_pipeline_error(c))
     return {
         "llm_calls": llm_calls,
         "llm_status_counts": status_counts,
