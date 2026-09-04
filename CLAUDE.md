@@ -63,15 +63,27 @@ RED_TEAM_LOG.md; that log is the source of truth for this pass, this is the summ
   whole-system outage sitting behind a green test suite), naive tz-less timestamps,
   Infinity/NaN amounts, NUL bytes, the validation-error handler itself, and a lost
   idempotency race reporting 500 instead of the winner's replay.
-- RT-C1-008 is OPEN and DEFERRED BY DESIGN, pending a human Decision 20. Baseline §6 locks
-  "unhandled pipeline exception -> HOLD" as a hard invariant; that fourth clause is
-  implemented NOWHERE -- there is no try/except boundary in run_pipeline or
-  api/transactions.py, so any unforeseen throw is a 500 with nothing persisted (no txn, no
-  case, no audit event), breaching eval-design §15's 100% audit-completeness target. It is
-  the systemic root cause behind RT-C1-002..006. Not patched unilaterally because the fix
-  changes what rows exist after a failure -- a persisted-state-contract change that needs a
-  numbered Decision. This is the recommended first item of the next session. Do not
-  implement it without that sign-off.
+- RT-C1-008 (the missing fail-closed exception boundary -- baseline §6's fourth clause,
+  previously implemented NOWHERE, and the systemic root cause behind RT-C1-002..006) is now
+  FIXED under Decision 20 (baseline §24, commit 1c07c60, human sign-off 2026-09-04).
+  run_pipeline's body is wrapped: on an otherwise-unhandled exception it rolls back the failed
+  attempt's partial writes, then persists a held transaction + open hold case + one audit
+  event carrying the exception type and a message with every request-supplied value actively
+  redacted (no traceback). No semantic_assessment and no gate_decision row -- Decision 5's "no
+  row when nothing validated", applied one layer earlier. It is a BACKSTOP, not a replacement:
+  the four structured fail-closed paths return outcomes rather than raising, so they never
+  reach it and keep their richer records. Three ripples worth knowing before touching this
+  area: cases.gate_decision_id is now NULLABLE (migration c4f1b7e2d9a3 -- a real weakening,
+  reasoned through in baseline §24); POST /transactions derives `decision` from transaction
+  state, not `gate_decision or "allow"`, which would have reported a held transaction as
+  allowed; and GET /cases/{id} returns evidence_packet/gate_decision as nullable plus a new
+  fail_closed_reason field. IntegrityError is deliberately re-raised (RT-C1-009's fix in
+  api/transactions.py depends on it).
+- eval-design §16's pipeline-error metric was updated to match (commit d451182): a backstop
+  catch no longer raises, so eval/report.py's is_pipeline_error() counts BOTH a caught
+  exception and PipelineResult.fail_closed_reason. C13's locked numbers are unaffected and
+  verifiably so -- recomputing the locked report's own 66 embedded case records through the
+  new code returns byte-identical metrics, with 0 cases carrying either error signal.
 - RT-C1-010 (no length cap on merchant/category) COSMETIC, open, deferred to Category 4.
 - Categories 2 (auth/injection boundaries), 3 (frontend/API contract integrity) and 4
   (demo-killers) NOT YET STARTED. Nothing in the Category 1 pass is evidence about them.
@@ -79,8 +91,9 @@ RED_TEAM_LOG.md; that log is the source of truth for this pass, this is the summ
   held (NaN/inf fall through to the MOST severe band by construction; exact band boundaries
   sit in the safer band by design, not a bug; resolved-case replay, 409 on key reuse with a
   different payload, shape validation). Read those before re-testing them.
-- Backend suite now collects 164 tests (151 at C14 + red-team regression tests); not re-run
-  in this session, so treat that as a count, not a green result.
+- Backend suite: 179 tests passing as of 2026-09-04 (151 at C14, plus red-team regression
+  tests, plus Decision 20's 10 backstop tests and 8 eval-metric tests). Run against real
+  Postgres, not collected -- this is a green result.
 
 NOT STARTED: e2e testing, red-team Categories 2-4, demo/video prep.
 
@@ -114,14 +127,16 @@ backend/app/config.py — all versioned thresholds/config, nothing hardcoded els
 Settings' .env path is anchored to config.py's own file location (Path(__file__)), not cwd
 backend/app/api/ — health.py, transactions.py (POST /transactions), cases.py (GET /cases,
 GET /cases/{id}, POST /cases/{id}/resolve) -- routing/serialization/auth only throughout
-backend/app/db/migrations/versions/ — head is 8a80952b350f (ix_cases_state)
+backend/app/db/migrations/versions/ — head is c4f1b7e2d9a3 (cases.gate_decision_id nullable,
+Decision 20); prior head 8a80952b350f (ix_cases_state)
 scripts/seed_demo_mandates.py — one-off local script, inserts demo mandates for the frontend
 frontend/ — Vite+React+TS Ops-analyst UI (Case Queue, Case Detail, Simulate Transaction);
 VITE_API_BASE_URL / VITE_API_BEARER_TOKEN via frontend/.env (gitignored, see .env.example)
 eval/run_locked_test.py — the locked test-set runner (Checkpoint C13), self-contained,
 deliberately not importing eval/run.py
 eval/generate_dataset.py, eval/verify_pairs.py, eval/generation_log.md
-RED_TEAM_LOG.md — the adversarial break/fix log (Category 1 complete; RT-C1-008 open)
+RED_TEAM_LOG.md — the adversarial break/fix log (Category 1 complete and fully closed;
+only RT-C1-010 COSMETIC remains, deferred to Category 4)
 fixtures/legitimate/, fixtures/drift/, fixtures/ambiguous/
 LABELING_RUBRIC.md
 
