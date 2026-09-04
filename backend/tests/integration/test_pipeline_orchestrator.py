@@ -231,3 +231,56 @@ def test_malformed_llm_output_fails_closed_to_hold_with_no_semantic_assessment_r
     assert len(audit_events) == 1
     assert audit_events[0].payload["llm_status"] == "malformed"
     assert audit_events[0].payload["gate_decision"] == "hold"
+
+
+# ---------------------------------------------------------------------------
+# Regression (red-team Category 1, 2026-09-04): a mandate's SECOND transaction
+# ---------------------------------------------------------------------------
+
+
+def test_second_transaction_against_a_mandate_does_not_crash_on_db_loaded_history(db_session):
+    """Red-team finding RT-C1-002. `historical_transactions` loaded back from Postgres carry
+    `decimal.Decimal` amounts (NUMERIC column), while the incoming one carries a `float`.
+    Summing one window containing both raised `TypeError: unsupported operand type(s) for +:
+    'decimal.Decimal' and 'float'` inside compute_velocity, so the live API 500'd on the
+    second transaction against ANY mandate -- an unhandled pipeline exception, which
+    baseline §6 requires to route to HOLD, never to a crash.
+
+    The pre-existing tests all passed history as freshly-flushed ORM rows (amount still the
+    assigned float) or as `[]`, so none of them round-tripped through the DB and none caught
+    it. `db_session.expire_all()` below is the whole point of this test: it forces the reload
+    that turns those amounts into Decimal.
+    """
+    mandate = _make_mandate(db_session, budget=100000.0)
+
+    # Four transactions on four separate days: clustering stays "normal"
+    # (max 24h-window count / total = 1/4 = 0.25, under clustering_normal_max=0.4), the huge
+    # budget keeps velocity "normal", and "groceries" is in-mandate so category_shift is
+    # "none". That keeps this regression on the nominal path -- no LLM call needed to reach
+    # the crash site, which is in compute_velocity, before the threshold check.
+    for day in range(1, 4):
+        db_session.add(models.Transaction(
+            mandate_id=mandate.id, merchant="Local Grocer", category="groceries", amount=10.0,
+            occurred_at=CREATED_AT + timedelta(days=day), idempotency_key=f"idem-decimal-hist-{day}",
+            state="allowed",
+        ))
+    db_session.flush()
+
+    # Force the reload: amounts come back from Postgres as Decimal, exactly as
+    # api/transactions.py sees them when it queries a mandate's existing history.
+    db_session.expire_all()
+    history = db_session.query(models.Transaction).filter_by(mandate_id=mandate.id).all()
+    assert history, "history must be non-empty for this regression to be meaningful"
+    from decimal import Decimal
+    assert isinstance(history[0].amount, Decimal), (
+        "precondition: DB-loaded amounts must be Decimal, else this test proves nothing"
+    )
+
+    incoming = IncomingTransaction(
+        merchant="Local Grocer", category="groceries", amount=12.0,
+        occurred_at=CREATED_AT + timedelta(days=4), idempotency_key="idem-decimal-incoming",
+    )
+    result = run_pipeline(db_session, mandate, history, incoming, llm_client=_FakeClient(None))
+
+    assert result.state == "allowed"
+    assert result.threshold_crossed is False

@@ -102,13 +102,31 @@ class IncomingTransaction:
 
 @dataclass(frozen=True)
 class _WindowTransaction:
-    """Adapts `IncomingTransaction` to `TransactionLike` for signal computation -- the
-    evidence engine's pure functions don't need (and the incoming transaction doesn't yet
-    have) a DB-assigned id."""
+    """Adapts both the incoming transaction and already-persisted history to
+    `TransactionLike` for signal computation -- the evidence engine's pure functions don't
+    need (and the incoming transaction doesn't yet have) a DB-assigned id.
+
+    `amount` is normalized to `float` here on purpose. `TransactionLike.amount` is declared
+    `float`, but a `models.Transaction` loaded back from Postgres carries a
+    `decimal.Decimal` (NUMERIC column), while the incoming transaction carries a real
+    `float` from the API request model. Mixing the two in one window made
+    `sum(t.amount for ...)` raise `TypeError: unsupported operand type(s) for +:
+    'decimal.Decimal' and 'float'` inside compute_velocity/compute_category_shift -- so the
+    live API 500'd on the *second* transaction against any mandate (the first has empty
+    history, hence no Decimal to mix). The eval harness never hit it because it passes
+    freshly-flushed ORM rows whose `amount` is still the Python float that was assigned,
+    never round-tripped through the DB. Normalizing at this boundary keeps the engine
+    receiving exactly what its Protocol declares, and makes the live and eval paths use one
+    identical representation rather than two that only coincidentally agree.
+    """
 
     amount: float
     category: str
     occurred_at: datetime
+
+    @classmethod
+    def of(cls, txn: TransactionLike) -> "_WindowTransaction":
+        return cls(amount=float(txn.amount), category=txn.category, occurred_at=txn.occurred_at)
 
 
 @dataclass(frozen=True)
@@ -147,9 +165,15 @@ def run_pipeline(
     together in one `session.commit()` -- Plan §D step 7/9's atomicity requirement.
     """
     incoming_as_window_txn = _WindowTransaction(
-        amount=incoming.amount, category=incoming.category, occurred_at=incoming.occurred_at
+        amount=float(incoming.amount), category=incoming.category, occurred_at=incoming.occurred_at
     )
-    transactions_in_window: list[TransactionLike] = [*historical_transactions, incoming_as_window_txn]
+    # Historical rows are normalized too, not passed through raw -- see _WindowTransaction's
+    # docstring for why a DB-loaded Decimal amount alongside a float one used to crash the
+    # signal computation outright.
+    transactions_in_window: list[TransactionLike] = [
+        *(_WindowTransaction.of(t) for t in historical_transactions),
+        incoming_as_window_txn,
+    ]
 
     velocity_result = compute_velocity(mandate, transactions_in_window, config=evidence_config)
     category_shift_result = compute_category_shift(mandate, transactions_in_window, config=evidence_config)
