@@ -35,7 +35,7 @@ never to silent ALLOW"*. Only one of the findings below was a true fail-open.
 | RT-C1-006 | NUL byte in merchant/category crashed | CRITICAL | Fixed `171ce63` |
 | RT-C1-007 | The validation-error handler itself crashed on non-serializable input | CRITICAL | Fixed `171ce63` |
 | RT-C1-008 | **No fail-closed exception boundary exists at all** | CRITICAL | **OPEN — needs human decision** |
-| RT-C1-009 | Concurrent same-key crossing requests → 500 instead of idempotent replay | MODERATE | Fixed `PENDING` |
+| RT-C1-009 | Concurrent same-key crossing requests → 500 instead of idempotent replay | MODERATE | Fixed `49d24f0` |
 | RT-C1-010 | No length cap on `merchant` / `category` | COSMETIC | Open |
 
 ---
