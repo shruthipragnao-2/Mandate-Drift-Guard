@@ -34,7 +34,7 @@ never to silent ALLOW"*. Only one of the findings below was a true fail-open.
 | RT-C1-005 | `NaN` amount crashed | CRITICAL | Fixed `171ce63` |
 | RT-C1-006 | NUL byte in merchant/category crashed | CRITICAL | Fixed `171ce63` |
 | RT-C1-007 | The validation-error handler itself crashed on non-serializable input | CRITICAL | Fixed `171ce63` |
-| RT-C1-008 | **No fail-closed exception boundary exists at all** | CRITICAL | **OPEN — needs human decision** |
+| RT-C1-008 | **No fail-closed exception boundary exists at all** | CRITICAL | Fixed `1c07c60` (Decision 20) |
 | RT-C1-009 | Concurrent same-key crossing requests → 500 instead of idempotent replay | MODERATE | Fixed `49d24f0` |
 | RT-C1-010 | No length cap on `merchant` / `category` | COSMETIC | Open |
 
@@ -177,7 +177,7 @@ live exception object).
 
 ---
 
-### RT-C1-008 — No fail-closed exception boundary exists — CRITICAL — **OPEN, NEEDS DECISION**
+### RT-C1-008 — No fail-closed exception boundary exists — CRITICAL — FIXED (Decision 20)
 
 **This is the systemic root cause behind RT-C1-002 through 006, and the most important
 unresolved item in this log.**
@@ -202,11 +202,37 @@ Mitigating context, stated fairly: a 500 is **not** a fail-open. No authorizatio
 and no money moves. The practical danger is lower than RT-C1-001. But it is a locked invariant
 that is currently unimplemented, and the audit trail is silently incomplete when it fires.
 
-**Not fixed here deliberately.** Implementing it means persisting a `held` transaction + case
-+ audit event when the pipeline throws — a change to what rows exist after a failure, i.e. a
-change to the system's persisted-state contract. That warrants a numbered Decision and human
-sign-off, not a unilateral 2 a.m. patch during a red-team pass. Recommended as the first item
-for the next session.
+**Deliberately not fixed during the red-team pass.** Implementing it means persisting a
+`held` transaction + case + audit event when the pipeline throws — a change to what rows exist
+after a failure, i.e. a change to the system's persisted-state contract. That warranted a
+numbered Decision and human sign-off, not a unilateral patch mid-pass.
+
+**Resolved 2026-09-04 as Decision 20** (`1c07c60`, baseline §24). `run_pipeline`'s full body is
+now wrapped in an exception boundary: on an otherwise-unhandled exception it rolls back the
+failed attempt's partial writes, then persists a `held` transaction, an open `hold` case, and
+one audit event (`pipeline_exception_fail_closed_hold`) recording the exception's type and
+message. No `semantic_assessments` row and no `gate_decisions` row — nothing validated and the
+gate was never reached — mirroring Decision 5 one layer earlier.
+
+Three consequences worth carrying forward, all recorded in Decision 20 itself rather than
+discovered later:
+
+1. **`cases.gate_decision_id` is now NULLABLE** (migration `c4f1b7e2d9a3`). "A case with no
+   gate decision" was previously unrepresentable. The decision records this plainly as the
+   weakening it is: a schema-level guarantee covering *all* cases was traded to represent one
+   new path, replaced by a narrower guarantee enforced in application code and tests rather
+   than by Postgres.
+2. **`GET /cases/{id}` had to stop using `.one()`** for the evidence packet and now returns
+   `evidence_packet`/`gate_decision` as nullable plus a `fail_closed_reason`. Otherwise
+   reading a fail-closed case would itself have 500'd — turning the analyst's attempt to view
+   the incident into a second incident.
+3. It is a **backstop, not a replacement**. The four structured failure paths (timeout,
+   malformed, transport_error, unusable confidence) do not raise, so they never reach the
+   handler and keep their richer records; a dedicated test pins that the backstop never starts
+   swallowing them.
+
+This closes the last CRITICAL from Category 1. Every finding in this log is now either fixed
+or explicitly deferred as COSMETIC.
 
 ---
 
