@@ -84,18 +84,55 @@ RED_TEAM_LOG.md; that log is the source of truth for this pass, this is the summ
   exception and PipelineResult.fail_closed_reason. C13's locked numbers are unaffected and
   verifiably so -- recomputing the locked report's own 66 embedded case records through the
   new code returns byte-identical metrics, with 0 cases carrying either error signal.
-- RT-C1-010 (no length cap on merchant/category) COSMETIC, open, deferred to Category 4.
-- Categories 2 (auth/injection boundaries), 3 (frontend/API contract integrity) and 4
-  (demo-killers) NOT YET STARTED. Nothing in the Category 1 pass is evidence about them.
+- RT-C1-010 (no length cap on merchant/category) COSMETIC, still open at the API layer --
+  its user-visible symptom (broken Case Detail layout on an unbroken long string) was fixed in
+  Category 4 as RT-C4-002; the underlying missing length cap itself was not.
+- Category 2 (auth/injection boundaries): COMPLETE, 2026-09-04. No CRITICAL findings, no auth
+  bypass found anywhere. RT-C2-002 (bearer token compared with `!=`, not constant-time) fixed
+  `4cdbe25` with `secrets.compare_digest`; measured honestly, the timing side-channel did not
+  reproduce as exploitable (0.006ms delta against a 0.88ms baseline). RT-C2-001 (OpenAPI
+  docs served unauthenticated) and RT-C2-003 (`mandate.purpose` is the one free-text field
+  that reaches the LLM) logged as COSMETIC/forward-looking, not fixed. A parallel run with a
+  recording stand-in at the LLM boundary verified the structural-exclusion property (no
+  merchant field, no free-text category) against the literal bytes sent to Anthropic, not a
+  rebuilt packet. 28 new auth-boundary tests.
+- Categories 3 (frontend/API contract integrity) and 4 (demo-killers): COMPLETE, 2026-09-04,
+  run against the real backend and real Vite dev server with headless-Chrome screenshots. No
+  CRITICAL findings. Two MODERATE issues found and fixed (`8d4c407`): RT-C4-001 (Vite silently
+  moving off port 5173 when occupied silently CORS-blocked every API call from the new origin)
+  and RT-C4-002 (an unbroken long merchant/category/purpose string breaking the Case Detail
+  layout). Three COSMETIC items logged, not fixed: RT-C4-003 (browser Back exits the app --
+  no history integration), RT-C3-001 (backend-unreachable banner shows a raw `TypeError`), and
+  RT-C3-002 (a 400 validation error renders as raw JSON).
 - Also recorded in RED_TEAM_LOG.md: "verified strengths" -- things actively attacked that
   held (NaN/inf fall through to the MOST severe band by construction; exact band boundaries
   sit in the safer band by design, not a bug; resolved-case replay, 409 on key reuse with a
-  different payload, shape validation). Read those before re-testing them.
-- Backend suite: 179 tests passing as of 2026-09-04 (151 at C14, plus red-team regression
-  tests, plus Decision 20's 10 backstop tests and 8 eval-metric tests). Run against real
-  Postgres, not collected -- this is a green result.
+  different payload, shape validation, SQL injection blocked before the ORM is reached with
+  row counts verified unchanged, no case-existence oracle pre-auth, CORS preflight leaks
+  nothing to a disallowed origin). Read those before re-testing them.
+- **All four red-team categories are now COMPLETE.** Backend suite: 225 tests passing as of
+  2026-09-05, run against real Postgres, not collected -- this is a green result.
 
-NOT STARTED: e2e testing, red-team Categories 2-4, demo/video prep.
+## Submission readiness (2026-09-05)
+The adversarial pass surfaced one more class of issue worth recording here rather than in
+RED_TEAM_LOG.md, since it's about the repository itself, not the running system: this repo's
+GitHub default branch was `main`, a 3-commit skeleton (`Initial commit` -> `C5: establish
+repository foundation` -> one stray `frontend commits` commit that had accidentally checked in
+`node_modules`), completely diverged from `c6-domain-model`, which carries all 35 real commits.
+Fixed by flipping GitHub's default branch to `c6-domain-model` via the API and deleting `main`
+entirely, both on origin and locally -- `c6-domain-model` is now the repo's only branch.
+Verified separately: no `.env` file or secret was ever committed on any branch, in any commit,
+at any point in history. Root `README.md`, `backend/README.md`, and `frontend/README.md` were
+all still describing Checkpoint-C5-era or template-default scope; rewritten to reflect current
+state. The live demo Postgres database also had ~17 red-team probe transactions (prompt
+injection, XSS, SQLi, oversized strings, `AuthProbe`/`LiveProbeMerchant`) left over from the
+Category 2-4 live-fire pass, sitting in the same tables the Case Queue reads from -- identified
+by exact signature match (not a blanket delete) and removed in FK-safe order; the ~405
+legitimate eval-dataset transactions and mandates were left untouched.
+
+NOT STARTED: automated e2e test suite (the red-team Category 3/4 screenshots were a one-off
+audit pass, not a regression suite); the actual demo video recording itself (the UI/latency-
+label/evidence-toggle polish it depends on is done, per C14 and Category 4 above).
 
 ## The pairing-verification template (hard-won, proven in the pilot — reuse this)
 Signal-first, not narrative-first: pick target bands → backward-solve exact numbers
@@ -135,8 +172,8 @@ VITE_API_BASE_URL / VITE_API_BEARER_TOKEN via frontend/.env (gitignored, see .en
 eval/run_locked_test.py — the locked test-set runner (Checkpoint C13), self-contained,
 deliberately not importing eval/run.py
 eval/generate_dataset.py, eval/verify_pairs.py, eval/generation_log.md
-RED_TEAM_LOG.md — the adversarial break/fix log (Category 1 complete and fully closed;
-only RT-C1-010 COSMETIC remains, deferred to Category 4)
+RED_TEAM_LOG.md — the adversarial break/fix log (all four categories complete and closed;
+RT-C1-010, RT-C4-003, RT-C3-001, RT-C3-002 remain open, all COSMETIC)
 fixtures/legitimate/, fixtures/drift/, fixtures/ambiguous/
 LABELING_RUBRIC.md
 

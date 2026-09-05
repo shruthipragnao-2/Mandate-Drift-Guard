@@ -1,32 +1,34 @@
-# React + TypeScript + Vite
+# Frontend — Ops-analyst UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Vite + React + TypeScript. Three screens against the backend's `GET /cases`,
+`GET /cases/{id}`, `POST /cases/{id}/resolve`, and `POST /transactions`:
 
-Currently, two official plugins are available:
+- **Case Queue** (`src/pages/CaseQueue.tsx`) — every case, all three states, with severity and
+  transaction context.
+- **Case Detail** (`src/pages/CaseDetail.tsx`) — the four-step pipeline story for one case, plus
+  the resolve action.
+- **Simulate Transaction** (`src/pages/SimulateTransaction.tsx`) — submit a transaction against a
+  seeded demo mandate and watch it move through the live pipeline.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+See the [root README](../README.md) for the full project overview.
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env   # VITE_API_BASE_URL / VITE_API_BEARER_TOKEN -- must match the backend's
+                        # API_BEARER_TOKEN (backend/.env)
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The backend must be running first (see `../backend/README.md`) and its CORS config
+(`backend/app/main.py`) must include this dev server's origin — it already covers
+`http://localhost:5173` and `http://127.0.0.1:5173` by default.
+
+## Other commands
+
+```bash
+npm run build     # tsc -b && vite build
+npm run lint       # oxlint
+npm run preview    # preview a production build
+```

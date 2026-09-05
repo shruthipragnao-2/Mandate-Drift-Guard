@@ -1,9 +1,9 @@
 # Backend — development setup
 
-Checkpoint C5 (repository foundation) scope only: app startup, config, DB connectivity/migration
-scaffolding, and a health check. No business logic (evidence engine, LLM layer, policy gate,
-mandates/transactions/cases APIs) exists yet — see `docs/IMPLEMENTATION-PLAN.md` §Q for the
-milestone plan.
+FastAPI + Postgres + Alembic backend for Mandate Drift Guard's three-layer pipeline (deterministic
+evidence engine → bounded LLM risk assessment → deterministic policy gate). See the
+[root README](../README.md) for the full project overview and architecture; this file is local
+dev-setup instructions only.
 
 ## Prerequisites
 
@@ -73,14 +73,16 @@ healthcheck. The backend does not run migrations automatically on startup in C5 
 > connection has actually been exercised yet. Please verify `docker compose up` and
 > `alembic upgrade head` against the real `db` service before relying on this in C6.
 
-## What's deliberately not here yet
+## Where things live
 
-- `app/db/models.py` (domain tables) — M1
-- `app/domain/*` (evidence engine, semantic risk client, policy gate, pipeline) — M1–M3
-- `app/api/mandates.py`, `transactions.py`, `cases.py`, `auth.py` — M4
-- `eval/`, root `fixtures/` — M5–M6
-- `frontend/` — M7
+- `app/domain/evidence_engine/` — the deterministic signal functions (velocity, category_shift,
+  clustering)
+- `app/domain/pipeline.py`, `policy_gate.py`, `semantic_risk_client.py` — orchestration, the
+  ALLOW/HOLD rule table, and the one bounded Claude call
+- `app/api/` — `transactions.py`, `cases.py`, `health.py` (routing/serialization/auth only)
+- `app/db/migrations/` — the Alembic chain
 
-See `docs/IMPLEMENTATION-PLAN.md` for the full milestone breakdown and `docs/
-IMPLEMENTATION-BASELINE.md` §15 / plan §S for decisions still open (disagreement-handling rule,
-retry policy, ingestion auth, signal thresholds, etc.) that later milestones depend on.
+Run the tests: `pytest` (225 passing as of the last full run, against a real Postgres instance).
+
+See the [root README](../README.md) for the full architecture and project status, and
+`docs/IMPLEMENTATION-BASELINE.md` for every locked engineering decision.
