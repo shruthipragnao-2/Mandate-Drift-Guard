@@ -209,6 +209,43 @@ button {
   white-space: nowrap;
 }
 
+/* Case Queue redesign (2026-09-05): merchant+category+amount is now the row's primary,
+   distinguishing line; mandate purpose moved to smaller secondary text beneath it.
+
+   Found live, not anticipated: merchant/category have no length cap (RT-C1-010, still open)
+   and this project's own red-team fixtures include a 400+ character merchant and a 20,000-
+   character one. Those used to surface only on Case Detail, one row at a time. Promoting
+   merchant/category to the QUEUE's primary line means every row now renders whatever length
+   string a transaction happened to carry, and `overflow-wrap: anywhere` (the existing
+   RT-C4-002 fix, still in effect below) stops horizontal overflow but does nothing about
+   vertical height -- a 20,000-character merchant wraps into hundreds of lines, turning one
+   row into the entire visible page. Single-line ellipsis truncation, scoped to the queue row
+   only: Case Detail (a different screen, out of this change's scope) still shows the value
+   in full, since an analyst actively investigating one case needs the whole string. */
+.case-row-primary,
+.case-row-secondary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 520px;
+}
+
+.case-row-primary {
+  font-weight: 600;
+}
+
+.case-row-secondary {
+  margin-top: 2px;
+}
+
+/* Opened_at is now secondary/small (per the redesign), which left it little enough column
+   width for `overflow-wrap: anywhere` (the general .case-table td rule) to wrap a short date
+   string across three lines. Dates do not need break-anywhere wrapping the way an unbounded
+   merchant string does. */
+.case-row-opened {
+  white-space: nowrap;
+}
+
 .mandate-context {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -305,6 +342,13 @@ button {
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
+  /* Found live in the Queue redesign: a badge's label is always a short, fixed-vocabulary
+     word (hold, resolved_allow, high, ...), never unbounded merchant/category text -- but the
+     Queue's new narrow Severity/Status columns are the first place a badge sits in a
+     column tight enough for the general `.case-table td { overflow-wrap: anywhere }` rule
+     (RT-C4-002) to break "hold" mid-word. That rule exists for attacker-length strings;
+     badges are never one, so they are exempted here rather than widening the columns. */
+  white-space: nowrap;
 }
 
 .badge-green {

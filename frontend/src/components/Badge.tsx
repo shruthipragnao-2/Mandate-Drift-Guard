@@ -60,6 +60,21 @@ export function toneForAlignment(level: string): BadgeTone {
   return ALIGNMENT_TONE[level] ?? "neutral";
 }
 
+// Case Queue redesign (2026-09-05): the resolve-status badge (hold | resolved_allow |
+// resolved_block) needs three genuinely distinct tones, not amber for everything -- hold is
+// still open (amber, needs attention), resolved_allow is a resolved-positive outcome (green),
+// resolved_block is a resolved-negative outcome (red). Distinct from toneForRisk/toneForBand
+// even though the color set overlaps: this maps case STATE, not a risk/band reading.
+const CASE_STATE_TONE: Record<string, BadgeTone> = {
+  hold: "amber",
+  resolved_allow: "green",
+  resolved_block: "red",
+};
+
+export function toneForCaseState(state: string): BadgeTone {
+  return CASE_STATE_TONE[state] ?? "neutral";
+}
+
 export function Badge({ label, tone }: { label: string; tone: BadgeTone }) {
   return <span className={`badge badge-${tone}`}>{label}</span>;
 }

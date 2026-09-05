@@ -6,6 +6,7 @@ export type CaseState = "hold" | "resolved_allow" | "resolved_block";
 export type TransactionState = "allowed" | "held" | "blocked";
 export type MandateAlignment = "low" | "medium" | "high";
 export type GateDecisionValue = "allow" | "hold";
+export type Severity = "high" | "medium" | "low";
 
 export interface CaseSummary {
   id: string;
@@ -14,6 +15,14 @@ export interface CaseSummary {
   state: CaseState;
   opened_at: string;
   mandate_purpose: string;
+  // Queue redesign (2026-09-05): merchant/category/amount are the row's actual distinguishing
+  // content -- mandate_purpose repeats across many cases against the same recurring mandate.
+  // severity is computed server-side per GET /cases/{id}'s three-way fallback (see
+  // backend/app/api/cases.py's _compute_severity) and is never itself persisted.
+  merchant: string;
+  category: string;
+  amount: number;
+  severity: Severity;
 }
 
 export interface CaseListResponse {

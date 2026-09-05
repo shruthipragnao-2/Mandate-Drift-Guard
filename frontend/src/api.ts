@@ -50,8 +50,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export function listCases(state: CaseState = "hold"): Promise<CaseListResponse> {
-  return request<CaseListResponse>(`/cases?state=${state}`);
+// Queue redesign (2026-09-05): no default state filter. GET /cases itself now defaults to
+// returning all three states -- the Ops-analyst queue needs the full picture, not just the
+// open backlog -- so omitting `state` here (rather than defaulting it to "hold" as before)
+// is what actually changed; `state` remains available for narrowing when a caller wants it.
+export function listCases(state?: CaseState): Promise<CaseListResponse> {
+  return request<CaseListResponse>(state ? `/cases?state=${state}` : "/cases");
 }
 
 export function getCaseDetail(caseId: string): Promise<CaseDetailResponse> {

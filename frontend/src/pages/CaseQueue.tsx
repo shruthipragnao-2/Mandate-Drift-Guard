@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, listCases } from "../api";
+import { Badge, toneForCaseState, toneForRisk } from "../components/Badge";
 import type { CaseSummary } from "../types";
 
 export function CaseQueue({ onOpenCase }: { onOpenCase: (caseId: string) => void }) {
@@ -11,7 +12,10 @@ export function CaseQueue({ onOpenCase }: { onOpenCase: (caseId: string) => void
     let cancelled = false;
     setCases(null);
     setError(null);
-    listCases("hold")
+    // Queue redesign (2026-09-05): no state argument -- GET /cases now defaults to all three
+    // states, and the queue's whole point is to show the full picture, not just the open
+    // backlog. `listCases` still accepts an explicit state for narrowing if ever needed.
+    listCases()
       .then((res) => {
         if (!cancelled) setCases(res.cases);
       })
@@ -39,10 +43,10 @@ export function CaseQueue({ onOpenCase }: { onOpenCase: (caseId: string) => void
 
       {cases !== null && cases.length === 0 && (
         <div className="empty-state">
-          <p className="empty-state-title">No cases on hold.</p>
+          <p className="empty-state-title">No cases yet.</p>
           <p className="muted">
-            Every transaction evaluated so far either matched its mandate or was already
-            resolved -- an empty queue is the system working as intended, not an error.
+            Every transaction evaluated so far has matched its mandate -- no case has ever
+            opened, which is the system working as intended, not an error.
           </p>
         </div>
       )}
@@ -51,7 +55,9 @@ export function CaseQueue({ onOpenCase }: { onOpenCase: (caseId: string) => void
         <table className="case-table">
           <thead>
             <tr>
-              <th>Mandate purpose</th>
+              <th>Transaction</th>
+              <th>Severity</th>
+              <th>Status</th>
               <th>Opened</th>
               <th />
             </tr>
@@ -59,8 +65,23 @@ export function CaseQueue({ onOpenCase }: { onOpenCase: (caseId: string) => void
           <tbody>
             {cases.map((c) => (
               <tr key={c.id} className="case-row" onClick={() => onOpenCase(c.id)}>
-                <td>{c.mandate_purpose}</td>
-                <td>{new Date(c.opened_at).toLocaleString()}</td>
+                <td>
+                  {/* Redesign (2026-09-05): merchant + category + amount are the row's actual
+                      distinguishing content -- mandate_purpose repeats across many cases
+                      against the same recurring mandate, so it moves to smaller secondary
+                      text below rather than being the primary label. */}
+                  <div className="case-row-primary">
+                    {c.merchant} <span className="muted">&middot; {c.category} &middot; {c.amount}</span>
+                  </div>
+                  <div className="muted case-row-secondary">{c.mandate_purpose}</div>
+                </td>
+                <td>
+                  <Badge label={c.severity} tone={toneForRisk(c.severity)} />
+                </td>
+                <td>
+                  <Badge label={c.state} tone={toneForCaseState(c.state)} />
+                </td>
+                <td className="muted case-row-opened">{new Date(c.opened_at).toLocaleString()}</td>
                 <td className="case-row-action">View &rarr;</td>
               </tr>
             ))}

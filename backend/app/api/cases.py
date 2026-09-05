@@ -1,5 +1,5 @@
-"""Case-queue read endpoints (Checkpoint C14) plus the HOLD-resolution endpoint (Checkpoint
-C12, Plan §E's `POST /cases/{id}/resolve` contract).
+"""Case-queue read endpoints (Checkpoint C14, queue redesigned 2026-09-05) plus the
+HOLD-resolution endpoint (Checkpoint C12, Plan §E's `POST /cases/{id}/resolve` contract).
 
 Routing/serialization/auth only throughout this file: the read endpoints below are plain
 queries over already-written rows (no domain-layer call at all -- there is no state to
@@ -8,6 +8,12 @@ compute, only to report), and `resolve_case` wraps `domain.pipeline.resolve_hold
 state machine itself is not reimplemented here. Decision 17's single bearer token now also
 gates these two read routes, matching the existing extension of that model to
 `POST /transactions` -- there is no separate read-only auth tier in this project.
+
+`list_cases`'s `severity` field is the one exception to "no computation" worth calling out
+explicitly: it is derived per-request from already-joined columns (never persisted as a new
+column, never a new query beyond the joins already needed for merchant/category/amount) --
+still routing/serialization in spirit, since it maps existing signal/risk values through a
+fixed table rather than deciding anything about the case.
 
 Decision 18's lazy timeout check runs FIRST, before the resolution request is processed: a
 case found timed-out on read transitions to `resolved_block` right there, and the resolution
@@ -45,10 +51,81 @@ class CaseSummary(BaseModel):
     state: Literal["hold", "resolved_allow", "resolved_block"]
     opened_at: datetime
     mandate_purpose: str
+    # Queue redesign (human-approved 2026-09-05): merchant/category/amount were already
+    # stored on `transactions` and already one join away -- they just were not serialized by
+    # this list endpoint, which previously exposed only mandate_purpose as the row's
+    # identifying text. Mandate purpose repeats across many cases against the same recurring
+    # mandate; merchant+category+amount is what actually distinguishes one row from the next.
+    merchant: str
+    category: str
+    amount: float
+    severity: Literal["high", "medium", "low"]
 
 
 class CaseListResponse(BaseModel):
     cases: list[CaseSummary]
+
+
+# Queue redesign: severity is computed per-request from data this endpoint already joins in
+# for merchant/category/amount -- not a new query, not a persisted column. Three-way fallback,
+# poorest-information-first, human-approved 2026-09-05:
+#
+#   1. semantic_assessment.risk_level exists -> direct mapping. Decision 6 already guarantees
+#      exactly one of low/medium/high, so no translation table is needed for this branch.
+#   2. no semantic_assessment but an evidence_packet exists -> the LLM leg failed closed
+#      (Decision 14's malformed/timeout/transport_error paths reach the gate as a status, not
+#      an exception, and the gate still HOLDs) -- but the deterministic signals are real and
+#      known, so the worst of the three bands stands in for the missing LLM read.
+#   3. neither exists -> Decision 20's fail-closed exception backstop: the pipeline threw
+#      before the evidence packet was ever built. Severity is "high" unconditionally, by
+#      explicit instruction -- an unexplained pipeline failure is maximally urgent, not
+#      unknown/deprioritized, and must not quietly sort to the bottom of the queue.
+_BAND_SEVERITY: dict[str, Literal["high", "medium", "low"]] = {
+    "critical": "high",
+    "severe": "high",
+    "highly_clustered": "high",
+    "elevated": "medium",
+    "minor": "medium",
+    "significant": "medium",
+    "clustered": "medium",
+    "normal": "low",
+    "none": "low",
+}
+
+_SEVERITY_RANK: dict[str, int] = {"low": 0, "medium": 1, "high": 2}
+
+
+def _worst_band_severity(signals: dict) -> Literal["high", "medium", "low"]:
+    """Branch 2 above. `signals` is `evidence_packets.signals`, always populated with all
+    three band keys by `packet_builder.build_evidence_packet` for any case that has an
+    evidence_packet row at all -- the `if band in _BAND_SEVERITY` guard and the empty-list
+    fallback below are defensive only, not an expected path, and deliberately fail toward
+    "high" rather than raising: a queue endpoint that 500s because of a malformed signals blob
+    would hide every other case behind it, which is worse than one row reading more urgent
+    than it should.
+    """
+    severities = [
+        _BAND_SEVERITY[band]
+        for band in (
+            signals.get("spend_velocity"),
+            signals.get("category_shift"),
+            signals.get("clustering"),
+        )
+        if band in _BAND_SEVERITY
+    ]
+    if not severities:
+        return "high"
+    return max(severities, key=lambda sev: _SEVERITY_RANK[sev])
+
+
+def _compute_severity(
+    risk_level: str | None, signals: dict | None
+) -> Literal["high", "medium", "low"]:
+    if risk_level is not None:
+        return risk_level  # type: ignore[return-value]  -- Decision 6 guarantees the value set
+    if signals is not None:
+        return _worst_band_severity(signals)
+    return "high"
 
 
 @router.get(
@@ -57,16 +134,70 @@ class CaseListResponse(BaseModel):
     dependencies=[Depends(require_bearer_token)],
 )
 def list_cases(
-    state: Literal["hold", "resolved_allow", "resolved_block"] = "hold",
+    state: Literal["hold", "resolved_allow", "resolved_block"] | None = None,
     db: Session = Depends(get_db),
 ) -> CaseListResponse:
-    rows = (
-        db.query(models.Case, models.Mandate.purpose)
+    """Queue redesign (human-approved 2026-09-05): `state` is now an OPTIONAL narrowing
+    filter, not the default view. Omitted, the queue returns cases in all three states --
+    the Ops-analyst screen needs the full picture, not just the open backlog, so a resolved
+    case does not simply disappear from view. The previous default of `state="hold"` is gone;
+    a caller that wants only-hold now passes `?state=hold` explicitly.
+
+    Sort order (human-approved 2026-09-05), computed in Python after fetching rather than
+    expressed in SQL: hold cases first, ordered by severity descending then opened_at
+    descending within the same severity; both resolved states after, combined and ordered by
+    resolved_at descending. A JSONB-aware `CASE WHEN` could express the severity ordering in
+    SQL, but at this project's demo scale a Python sort over the full (already-fetched) result
+    set is simpler to get right and to verify than hand-rolled SQL band logic, and this
+    endpoint has no pagination to make server-side sorting load-bearing.
+    """
+    query = (
+        db.query(
+            models.Case,
+            models.Mandate.purpose,
+            models.Transaction.merchant,
+            models.Transaction.category,
+            models.Transaction.amount,
+            models.EvidencePacket.signals,
+            models.SemanticAssessment.risk_level,
+        )
         .join(models.Mandate, models.Case.mandate_id == models.Mandate.id)
-        .filter(models.Case.state == state)
-        .order_by(models.Case.opened_at.desc())
-        .all()
+        .join(models.Transaction, models.Case.transaction_id == models.Transaction.id)
+        # Both outer: an evidence_packet may not exist at all (Decision 20 backstop, no
+        # threshold-crossing evaluation ever completed), and a semantic_assessment may not
+        # exist even when an evidence_packet does (Decision 14's fail-closed LLM statuses).
+        .outerjoin(
+            models.EvidencePacket,
+            models.EvidencePacket.transaction_id == models.Transaction.id,
+        )
+        .outerjoin(models.GateDecision, models.Case.gate_decision_id == models.GateDecision.id)
+        .outerjoin(
+            models.SemanticAssessment,
+            models.GateDecision.semantic_assessment_id == models.SemanticAssessment.id,
+        )
     )
+    if state is not None:
+        query = query.filter(models.Case.state == state)
+    rows = query.all()
+
+    computed = [
+        (case, purpose, merchant, category, amount, _compute_severity(risk_level, signals))
+        for case, purpose, merchant, category, amount, signals, risk_level in rows
+    ]
+
+    def _sort_key(item: tuple) -> tuple[int, int, float]:
+        case, _purpose, _merchant, _category, _amount, severity = item
+        if case.state == "hold":
+            return (0, -_SEVERITY_RANK[severity], -case.opened_at.timestamp())
+        # `resolved_at` is set by every path that leaves `hold` (Decision 1's confirm/deny,
+        # Decision 18's timeout) -- `or case.opened_at` is a defensive fallback only, so one
+        # malformed row degrades to opened_at ordering instead of raising and hiding the
+        # entire queue behind a 500.
+        resolved_at = case.resolved_at or case.opened_at
+        return (1, 0, -resolved_at.timestamp())
+
+    computed.sort(key=_sort_key)
+
     return CaseListResponse(
         cases=[
             CaseSummary(
@@ -76,8 +207,12 @@ def list_cases(
                 state=case.state,
                 opened_at=case.opened_at,
                 mandate_purpose=purpose,
+                merchant=merchant,
+                category=category,
+                amount=float(amount),
+                severity=severity,
             )
-            for case, purpose in rows
+            for case, purpose, merchant, category, amount, severity in computed
         ]
     )
 
