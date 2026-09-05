@@ -393,6 +393,59 @@ button {
   gap: 10px;
 }
 
+/* Demo-video polish pass. Marks Simulate Transaction as a developer/test tool, visually
+   distinct from the two analyst-facing screens -- a real confusion someone hit using it
+   themselves (it looks like an ordinary form, with nothing signaling "this is not the
+   consumer checkout flow, it's a way to inject a test transaction"). Dashed border matches
+   .empty-state's existing "this is a distinct kind of content" language rather than
+   introducing a new visual idiom. */
+.dev-tool-banner {
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--neutral-bg);
+}
+
+.dev-tool-banner p {
+  margin: 4px 0 0;
+}
+
+.dev-tool-label {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--neutral-text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Case Detail's latency label (next to "3. Semantic Assessment") and the raw-evidence-packet
+   disclosure (under "2. Deterministic Signals") -- both additive, both reuse existing tokens. */
+.latency-label {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.evidence-packet-disclosure {
+  margin-top: 10px;
+}
+
+.evidence-packet-disclosure summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.evidence-packet-note {
+  margin: 8px 0 4px;
+  font-size: 0.85rem;
+}
+
 .simulate-form {
   background: var(--surface);
   border: 1px solid var(--border);

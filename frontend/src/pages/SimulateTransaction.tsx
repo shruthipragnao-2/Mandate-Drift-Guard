@@ -50,11 +50,15 @@ export function SimulateTransaction({ onOpenCase }: { onOpenCase: (caseId: strin
       <div className="page-header">
         <h1>Simulate Transaction</h1>
       </div>
-      <p className="muted">
-        Submits a real transaction to the running pipeline (deterministic signals, then --
-        if a threshold crosses -- a real Anthropic API call). This is the live demo trigger,
-        not a mock.
-      </p>
+      <div className="dev-tool-banner">
+        <span className="dev-tool-label">Developer tool</span>
+        <p className="muted">
+          Simulates an incoming transaction from an AI agent&apos;s checkout flow -- there is
+          no real payment rail in this build. Submits a real transaction to the running
+          pipeline (deterministic signals, then -- if a threshold crosses -- a real Anthropic
+          API call): this is the live demo trigger, not a mock.
+        </p>
+      </div>
 
       <form className="simulate-form" onSubmit={handleSubmit}>
         <label>

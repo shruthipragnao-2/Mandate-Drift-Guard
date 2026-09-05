@@ -81,6 +81,9 @@ def test_full_pipeline_story_happy_path(
     assert body["semantic_assessment"]["mandate_alignment"] == "low"
     assert body["semantic_assessment"]["confidence"] == 0.91
     assert body["semantic_assessment"]["evidence"] == ["spend has shifted away from allowed categories"]
+    # Demo-polish addition: latency_ms was already stored (make_semantic_assessment's default
+    # is 450) but never serialized here. Pinned so the field can't silently disappear again.
+    assert body["semantic_assessment"]["latency_ms"] == 450
 
     assert body["gate_decision"]["decision"] == "hold"
     assert body["gate_decision"]["rule_applied"] == "threshold crossed, routed to HOLD"

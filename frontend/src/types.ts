@@ -56,6 +56,7 @@ export interface SemanticAssessmentDetail {
   mandate_alignment: MandateAlignment;
   confidence: number;
   evidence: string[];
+  latency_ms: number;
 }
 
 export interface GateDecisionDetail {

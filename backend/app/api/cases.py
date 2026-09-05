@@ -113,6 +113,12 @@ class SemanticAssessmentDetail(BaseModel):
     mandate_alignment: Literal["low", "medium", "high"]
     confidence: float
     evidence: list[str]
+    # Added for the demo-video polish pass (frontend-only in intent -- this is the one field
+    # that had to be surfaced here first, since `semantic_assessments.latency_ms` was already
+    # stored and already read into this handler's ORM object, just never serialized). Routing/
+    # serialization only, per this file's own module docstring -- no domain/pipeline/gate code
+    # touched, no new endpoint, no new query, no change to what gets computed or persisted.
+    latency_ms: int
 
 
 class GateDecisionDetail(BaseModel):
@@ -223,6 +229,7 @@ def get_case_detail(case_id: uuid.UUID, db: Session = Depends(get_db)) -> CaseDe
             mandate_alignment=semantic_assessment.mandate_alignment,
             confidence=float(semantic_assessment.confidence),
             evidence=semantic_assessment.evidence,
+            latency_ms=semantic_assessment.latency_ms,
         )
         if semantic_assessment is not None
         else None,
